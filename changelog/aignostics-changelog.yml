@@ -1,0 +1,73 @@
+generated: '2026-09-14'
+method: searched
+source: >-
+  https://aignostics.readthedocs.io/en/latest/release-notes.html,
+  https://github.com/aignostics/python-sdk/releases
+scope: >-
+  The published changelog covers the Aignostics Python SDK, not the Platform API. There is no
+  separate API changelog; API capability changes are visible only as SDK release notes or by
+  diffing the live OpenAPI document.
+scheme: semver
+current_version: 1.5.0
+current_released: '2026-08-13'
+releases_total: 135
+url: https://aignostics.readthedocs.io/en/latest/release-notes.html
+breaking_change_policy: none-published
+entries:
+- version: 1.5.0
+  date: '2026-08-13'
+  type: minor
+  breaking: false
+  highlights:
+  - Run sharing via share tokens
+  - Custom metadata checksums (optimistic concurrency, 412 on mismatch)
+  - Pancreatic, prostate and stomach cancer indications added
+- version: 1.4.0
+  date: '2026-05-13'
+  type: minor
+  breaking: false
+  highlights:
+  - Application version document commands
+  - External token provider support
+- version: 1.3.0
+  date: '2026-05-04'
+  type: minor
+  breaking: false
+  highlights:
+  - Organization parameter added to the OAuth flow
+  - Expanded run filtering
+- version: 1.2.0
+  date: '2026-03-10'
+  type: minor
+  breaking: false
+  highlights:
+  - Run summarization options
+  - Item filtering for results retrieval
+- version: 1.1.0
+  date: '2026-02-10'
+  type: minor
+  breaking: false
+  highlights:
+  - Central MCP server with auto-discovery of plugin tools
+- version: 1.0.3
+  date: '2026-01-09'
+  type: patch
+  breaking: false
+  highlights:
+  - Fixed platform bucket preservation in item SDK metadata
+- version: 1.0.2
+  date: '2025-12-18'
+  type: patch
+  breaking: false
+  highlights:
+  - Pinned QuPath to 0.6.0 for stability
+- version: 1.0.1
+  date: '2025-12-17'
+  type: patch
+  breaking: false
+  highlights:
+  - Security update pinning filelock >= 3.20.1
+notes: >-
+  No release in the recent window is marked breaking; the 0.2.x to 1.0.0 transition was the first
+  major version. The changelog is undated at the entry level on the rendered page - dates here are
+  taken from the GitHub release publication timestamps for the matching tags.

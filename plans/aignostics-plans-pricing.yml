@@ -1,0 +1,70 @@
+generated: '2026-09-14'
+method: searched
+source: >-
+  https://www.aignostics.com/sitemap.xml, https://www.aignostics.com/products/atlas-he-tme,
+  https://www.aignostics.com/products/atlas-he-tme/for-academics,
+  https://www.aignostics.com/products/atlas-he-tme/for-life-sciences,
+  https://aignostics.readthedocs.io/en/latest/get_started_api.html
+plan_count: 0
+pricing_page: null
+model: enterprise-subscription-contact-sales
+summary: >-
+  Aignostics publishes no prices, no tiers, no per-slide rate and no quota figures. The site has no
+  /pricing page at all - https://www.aignostics.com/pricing returns HTTP 404 and no pricing URL
+  appears in the sitemap. Access is organization-level: "Organizations subscribe to the Aignostics
+  Platform and receive dedicated infrastructure including a Google Cloud Storage bucket and API
+  access", and the API getting-started guide says an organization must "first be registered by our
+  business support team" with a client_id issued by support@aignostics.com. A quota exists and is
+  enforced in the contract - POST /v1/runs returns 402 Payment Required when "a quota limit (slides
+  per run, or monthly slides) would be exceeded" - but neither number is published anywhere.
+plans: []
+free_access_programs:
+- name: Research Access Program
+  audience: academic researchers
+  price: 0
+  statement: There is no cost to apply or to participate in the Program.
+  source: https://www.aignostics.com/products/atlas-he-tme/for-academics
+  access_route: application by Google Form, reviewed on scientific merit, response within 2 weeks
+  note: >-
+    A gated free tier, not a self-serve one - there is no signup that yields API access without
+    human review.
+- name: OpenTME
+  audience: public
+  price: 0
+  statement: open-access Atlas H&E-TME outputs
+  source: https://www.aignostics.com/products/atlas-he-tme/for-academics
+  access_route: Hugging Face dataset download, not the Platform API
+  note: >-
+    A published dataset, not API access. Explored through the aignostics/tme-studio toolkit rather
+    than through platform.aignostics.com.
+quota:
+  enforced: true
+  dimensions:
+  - slides per run
+  - monthly slides
+  values_published: false
+  enforcement:
+    status: 402
+    operation: create_run_v1_runs_post
+    description: Payment Required - A quota limit (slides per run, or monthly slides) would be exceeded by this run
+    source: openapi/aignostics-platform-api-openapi.json
+  note: >-
+    This is the most useful pricing fact available: the unit of billing is the slide, the accounting
+    period is the month, and there is a per-run cap as well as a monthly one. An integrator can build
+    against those two dimensions without knowing the numbers, and the API will tell them before it
+    charges rather than after.
+cost_control_affordances:
+- affordance: cancel a run mid-flight
+  operation: cancel_run_v1_runs__run_id__cancel_post
+  detail: >-
+    "The pending items of a canceled run will not be processed and will not add to the cost" -
+    an explicit, contract-level statement that cancellation stops billing, which is rare and worth
+    naming for anyone budgeting an automated pipeline.
+probed:
+- url: https://www.aignostics.com/pricing
+  status: 404
+- url: https://www.aignostics.com/products/atlas-he-tme/for-academics
+  status: 200
+- url: https://www.aignostics.com/sitemap.xml
+  status: 200
+  note: 19 non-editorial URLs, none of them a pricing page

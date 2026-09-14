@@ -1,0 +1,200 @@
+generated: '2026-09-14'
+method: derived
+source: openapi/aignostics-platform-api-openapi.json ($ref graph + id-reference fields across 45 schemas)
+api: Aignostics Platform API
+summary: >-
+  A four-level containment tree - Organization owns Runs, a Run contains Items (one per whole slide
+  image), an Item carries Input and Output Artifacts - plus an Application catalog the Run points
+  into, and a small access-control side graph of Grants and Share Tokens that can be attached to any
+  resource. Identifiers are opaque; the only caller-controlled key is `external_id`, unique within a
+  run.
+entities:
+- name: Organization
+  schema: OrganizationReadResponse
+  read_via: get_me_v1_me_get
+  key: id
+  fields:
+  - id
+  - name
+  - display_name
+  - aignostics_bucket_name
+  - aignostics_bucket_protocol
+  - aignostics_bucket_hmac_access_key_id
+  - aignostics_bucket_hmac_secret_access_key
+  - aignostics_logfire_token
+  - aignostics_sentry_dsn
+  note: >-
+    GET /v1/me is not only an identity endpoint - it is the credential-distribution endpoint. The
+    organization object returned carries the HMAC access key ID AND secret access key for the
+    org's Google Cloud Storage bucket, plus a Logfire ingest token and a Sentry DSN. Any integration
+    that logs or caches the /v1/me response is persisting live storage credentials; the spec's own
+    field description says "Keep this credential secure."
+- name: User
+  schema: UserReadResponse
+  read_via: get_me_v1_me_get
+  key: id
+  fields: [id, email, email_verified, name, given_name, family_name, nickname, picture, updated_at]
+  note: OIDC profile claims passed through from the Auth0 tenant.
+- name: Application
+  schema: ApplicationReadResponse
+  read_via: [list_applications_v1_applications_get, read_application_by_id_v1_applications__application_id__get]
+  key: application_id
+  fields: [application_id, name, regulatory_classes, description, versions]
+  note: >-
+    regulatory_classes is the domain-significant field - RUO, IVDR, FDA - and it is per application,
+    not per company. See conformance/aignostics-conformance.yml.
+- name: ApplicationVersion
+  schema: VersionReadResponse
+  read_via: application_version_details_v1_applications__application_id__versions__version__get
+  key: version_number
+  fields: [version_number, changelog, input_artifacts, output_artifacts, released_at]
+  note: >-
+    The version object IS the per-application contract: input_artifacts[] declares the accepted MIME
+    types and the JSON Schema each item's metadata must satisfy, output_artifacts[] declares what
+    comes back. A generic client must read this at runtime; the platform OpenAPI deliberately does
+    not model application-specific metadata.
+- name: VersionDocument
+  schema: VersionDocumentResponse
+  read_via: [list_version_documents, get_version_document]
+  key: id
+  fields: [id, name, mime_type, visibility, created_at, updated_at]
+  note: >-
+    Only documents with visibility=public and status=uploaded are listed. Content is served as a 307
+    to a short-lived signed GCS URL.
+- name: Run
+  schema: RunReadResponse
+  read_via: [list_runs_v1_runs_get, get_run_v1_runs__run_id__get]
+  created_by: create_run_v1_runs_post
+  key: run_id
+  fields: [run_id, application_id, version_number, state, output, termination_reason, error_code, error_message, statistics, custom_metadata, custom_metadata_checksum, submitted_at, submitted_by, organization_id, scheduling]
+  states: [PENDING, PROCESSING, TERMINATED]
+  termination_reasons: [ALL_ITEMS_PROCESSED, CANCELED_BY_SYSTEM, CANCELED_BY_USER]
+  output_states: [NONE, PARTIAL, FULL]
+- name: Item
+  schema: ItemResultReadResponse
+  read_via: [list_run_items_v1_runs__run_id__items_get, get_item_by_run_v1_runs__run_id__items__external_id__get]
+  key: item_id
+  natural_key: external_id
+  fields: [item_id, external_id, custom_metadata, custom_metadata_checksum, queue_position_org, queue_position_platform, state, output, termination_reason, error_code, error_message, terminated_at, input_artifacts, output_artifacts]
+  states: [PENDING, PROCESSING, TERMINATED]
+  termination_reasons: [SUCCEEDED, USER_ERROR, SYSTEM_ERROR, SKIPPED]
+  note: >-
+    One item is one whole slide image. queue_position_org and queue_position_platform expose live
+    scheduling depth - an unusually transparent field to publish, and the only throughput signal the
+    API gives a caller.
+- name: InputArtifact
+  schema: InputArtifactResultReadResponse
+  key: input_artifact_id
+  fields: [input_artifact_id, name, metadata, download_url]
+  accepted_mime_types: [application/dicom, application/zip, application/octet-stream, image/tiff]
+- name: OutputArtifact
+  schema: OutputArtifactResultReadResponse
+  key: output_artifact_id
+  fields: [output_artifact_id, name, metadata, state, termination_reason, output, error_code, error_message, download_url]
+  states: [PENDING, PROCESSING, TERMINATED]
+  output_states: [NONE, AVAILABLE, DELETED_BY_USER, DELETED_BY_SYSTEM]
+  scope: [ITEM, GLOBAL]
+  visibility: [INTERNAL, EXTERNAL]
+  mime_types: [application/vnd.apache.parquet, application/json, image/tiff]
+- name: Grant
+  schema: GrantReadResponse
+  read_via: [list_grants_v1_access_grants_get, get_grant_v1_access_grants__grant_id__get]
+  created_by: create_grant_v1_access_grants_post
+  key: grant_id
+  fields: [grant_id, resource_type, resource_id, subject_type, subject_id, relation, created_by, created_at, revoked]
+  resource_types: [run, item, output_artifact, share_token]
+  subject_types: [user, organization_admin, organization_user, share_token]
+  relations: [owner, editor, viewer]
+  note: >-
+    A Zanzibar-shaped relation tuple (resource, relation, subject) exposed directly as an API
+    resource. Only viewer grants may be created through the API - anything else returns 422.
+- name: ShareToken
+  schema: ShareTokenReadResponse
+  created_by: create_share_token_v1_access_share_tokens_post
+  key: share_token_id
+  fields: [share_token_id, created_at, expires_at, revoked]
+  note: >-
+    A bearer credential that becomes a grant subject. The secret value is returned once, on creation,
+    and never stored; expires_at is caller-set at creation.
+relationships:
+- from: Organization
+  to: Run
+  type: has_many
+  via: RunReadResponse.organization_id
+- from: Organization
+  to: User
+  type: has_many
+  via: MeReadResponse composition
+- from: User
+  to: Run
+  type: has_many
+  via: RunReadResponse.submitted_by
+- from: Application
+  to: ApplicationVersion
+  type: has_many
+  via: ApplicationReadResponse.versions[]
+- from: ApplicationVersion
+  to: VersionDocument
+  type: has_many
+  via: GET /v1/applications/{application_id}/versions/{version}/documents
+- from: ApplicationVersion
+  to: InputArtifact
+  type: has_many
+  via: VersionReadResponse.input_artifacts[]
+- from: ApplicationVersion
+  to: OutputArtifact
+  type: has_many
+  via: VersionReadResponse.output_artifacts[]
+- from: Run
+  to: Application
+  type: belongs_to
+  via: RunReadResponse.application_id
+- from: Run
+  to: ApplicationVersion
+  type: belongs_to
+  via: RunReadResponse.version_number
+- from: Run
+  to: Item
+  type: has_many
+  via: GET /v1/runs/{run_id}/items
+- from: Run
+  to: RunItemStatistics
+  type: has_one
+  via: RunReadResponse.statistics
+- from: Run
+  to: SchedulingResponse
+  type: has_one
+  via: RunReadResponse.scheduling
+- from: Item
+  to: InputArtifact
+  type: has_many
+  via: ItemResultReadResponse.input_artifacts[]
+- from: Item
+  to: OutputArtifact
+  type: has_many
+  via: ItemResultReadResponse.output_artifacts[]
+- from: Grant
+  to: Run
+  type: belongs_to
+  via: GrantReadResponse.resource_id where resource_type = run
+- from: Grant
+  to: ShareToken
+  type: belongs_to
+  via: GrantReadResponse.subject_id where subject_type = share_token
+identifiers:
+  scheme: opaque
+  prefixes_published: false
+  caller_supplied:
+  - field: external_id
+    entity: Item
+    constraint: must be unique within a run; a duplicate is rejected with 400
+  note: >-
+    No id-prefix convention (no run_, item_ style prefixes) is documented, so an identifier carries
+    no type information. external_id is the only join key a caller controls and is therefore the
+    only durable link back to a caller's own case or specimen record.
+enumerations:
+  count: 14
+  note: >-
+    The contract is enum-heavy and consistently so - PENDING/PROCESSING/TERMINATED is reused for
+    Run, Item and OutputArtifact state, and SUCCEEDED/USER_ERROR/SYSTEM_ERROR/SKIPPED for Item and
+    Artifact termination. A client can write one state machine and apply it at three levels.

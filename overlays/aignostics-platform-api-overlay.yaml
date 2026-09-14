@@ -1,0 +1,120 @@
+overlay: 1.0.0
+info:
+  title: API Evangelist enhancements for the Aignostics Platform API
+  version: 1.0.0
+x-generated: '2026-09-14'
+x-method: generated
+x-source: openapi/aignostics-platform-api-openapi.json
+x-extends: openapi/aignostics-platform-api-openapi.json
+x-note: >-
+  Enhancements only. The original document is stored verbatim and is never mutated. The largest
+  correction here is servers[] - the published contract declares a single relative server, "/api",
+  which is correct inside the Console that renders it but leaves any standalone generated client
+  with no host at all.
+actions:
+- target: $
+  description: Replace the relative server with the absolute production base the documentation names.
+  update:
+    servers:
+    - url: https://platform.aignostics.com/api
+      description: >-
+        Aignostics Platform production. The documented API base is
+        https://platform.aignostics.com/api/v1; the v1 segment is carried in every path in this
+        document.
+- target: $.info
+  description: Add contact, licence and terms metadata the published document omits.
+  update:
+    contact:
+      name: Aignostics Support
+      email: support@aignostics.com
+      url: https://www.aignostics.com/contact
+    x-provider:
+      legal_name: Aignostics GmbH
+      address: Alt-Moabit 73/73A, 10555 Berlin, Germany
+      register: Amtsgericht Charlottenburg HRB 215748 B
+      vat_id: DE329308485
+      source: https://www.aignostics.com/impressum
+    x-status-page: https://status.aignostics.com/
+    x-documentation: https://aignostics.readthedocs.io/en/latest/get_started_api.html
+- target: $.components.securitySchemes.OAuth2AuthorizationCodeBearer
+  description: >-
+    Record the device-authorization flow the documentation teaches and the SDK uses, which the
+    published securityScheme omits.
+  update:
+    x-additional-flows:
+      deviceCode:
+        standard: RFC 8628
+        deviceAuthorizationUrl: https://aignostics-platform.eu.auth0.com/oauth/device/code
+        tokenUrl: https://aignostics-platform.eu.auth0.com/oauth/token
+        grantType: urn:ietf:params:oauth:grant-type:device_code
+        audience: https://aignostics-platform-samia
+        scope: offline_access
+        source: https://aignostics.readthedocs.io/en/latest/get_started_api.html
+- target: $.paths['/v1/runs'].post
+  description: >-
+    Mark the cost, idempotency and reversal characteristics of the one operation that spends money.
+  update:
+    x-billable: true
+    x-idempotent: false
+    x-idempotency-note: >-
+      No idempotency key is accepted. The documentation states "POST /v1/runs is not idempotent -
+      calling it twice analyzes your slides twice." Record the returned run_id before any retry.
+    x-reversal:
+      operation: cancel_run_v1_runs__run_id__cancel_post
+      window: any time while the run is not in the TERMINATED state
+      cost_effect: pending items are not processed and do not add to the cost
+    x-quota:
+      dimensions: [slides per run, monthly slides]
+      exhaustion_status: 402
+      values_published: false
+- target: $.paths['/v1/runs/{run_id}/artifacts'].delete
+  description: Mark the irreversible operation and the retention window that applies regardless.
+  update:
+    x-reversible: false
+    x-retention:
+      auto_delete_days: 30
+      after: run completion
+      note: >-
+        Artifacts are deleted automatically 30 days after the run finishes whether or not this
+        operation is ever called. Retrieve results inside that window.
+- target: $.paths['/v1/applications'].get
+  description: >-
+    Flag the pagination parameter-name inconsistency; this endpoint spells it `page-size` while every
+    other collection spells it `page_size`.
+  update:
+    x-convention-deviation:
+      field: page-size
+      expected: page_size
+      affects: generated clients and hand-written callers
+      other_endpoints_using_page_size:
+      - /v1/runs
+      - /v1/runs/{run_id}/items
+      - /v1/access/grants
+      - /v1/access/share-tokens
+- target: $.paths['/v1/me'].get
+  description: Flag that the identity endpoint returns live storage credentials.
+  update:
+    x-returns-credentials: true
+    x-handling-note: >-
+      OrganizationReadResponse carries aignostics_bucket_hmac_access_key_id,
+      aignostics_bucket_hmac_secret_access_key, aignostics_logfire_token and aignostics_sentry_dsn.
+      Do not log, cache or forward this response.
+- target: $
+  description: >-
+    Record the domain standards the contract signals, so a reader does not have to infer them from
+    a MIME type table.
+  update:
+    x-domain-standards:
+    - id: dicom
+      signal: application/dicom accepted as an input artifact media type
+    - id: regulatory-classes
+      signal: ApplicationReadResponse.regulatory_classes enumerates RUO, IVDR, FDA per application
+      note: read at runtime before using any result clinically
+- target: $
+  description: Record the event surface the contract references but does not describe.
+  update:
+    x-event-surface:
+      documented: false
+      dangling_reference: >-
+        RunCreationRequest.callback_context is "echoed in state-change events", but no webhook,
+        callback or AsyncAPI channel is published. Consumption today is polling.

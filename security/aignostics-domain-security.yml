@@ -1,0 +1,39 @@
+generated: '2026-09-14'
+method: probed
+source: live DNS/TLS/HTTP probes of apis.yml + OpenAPI hosts
+hosts:
+- host: www.aignostics.com
+  https: true
+  tls_version: TLSv1.3
+  cert_expires: Nov  9 04:02:54 2026 GMT
+  hsts: true
+  hsts_max_age: 31536000
+- host: aignostics.readthedocs.io
+  https: true
+  tls_version: TLSv1.3
+  cert_expires: Oct 25 13:31:53 2026 GMT
+  hsts: true
+  hsts_max_age: 31536000
+- host: platform.aignostics.com
+  https: true
+  tls_version: TLSv1.3
+  cert_expires: Oct 25 04:06:08 2026 GMT
+  hsts: null
+domains:
+- domain: aignostics.com
+  dnssec: false
+  caa: []
+  spf: true
+  dmarc: true
+  dmarc_policy: reject
+- domain: readthedocs.io
+  dnssec: false
+  caa:
+  - 0 issuewild "amazonaws.com"
+  - 0 issuewild "comodoca.com"
+  - 0 issuewild "digicert.com; cansignhttpexchanges=yes"
+  - 0 issuewild "letsencrypt.org"
+  - 0 issuewild "pki.goog; cansignhttpexchanges=yes"
+  - 0 issuewild "ssl.com"
+  spf: false
+  dmarc: false

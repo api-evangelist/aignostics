@@ -1,0 +1,205 @@
+generated: '2026-09-14'
+method: probed
+source: live probes of every host in apis.yml plus the Auth0 tenant named by the OpenAPI securityScheme
+notes: >-
+  The registrable domain (aignostics.com / www.aignostics.com) is a Webflow site that answers every
+  /.well-known/* request with an 88-byte "Invalid .well-known request" page (HTTP 404) and every other
+  unknown path with the 404 marketing shell - no discovery documents are served there. The Platform
+  host (platform.aignostics.com) sits behind an Auth0 session gate that 307s every unauthenticated
+  path, including /.well-known/*, to /auth0-api/auth/login, so no anonymous discovery document is
+  reachable on it either. The only real discovery documents Aignostics serves are on its dedicated
+  Auth0 tenant, aignostics-platform.eu.auth0.com - the authorization server the published OpenAPI
+  securityScheme points at - which returns a valid RFC 8414 / OIDC discovery document and a JWKS.
+  portal.aignostics.com is an SPA catch-all: it answered HTTP 200 with an identical 568-byte HTML
+  shell for every path probed, INCLUDING the negative control, so every hit on that host is discarded.
+path_echo_control: failed-on-portal-host-only
+hosts:
+- host: https://aignostics.com
+  documents:
+  - path: /.well-known/security.txt
+    status: 404
+  - path: /.well-known/openid-configuration
+    status: 404
+  - path: /.well-known/oauth-authorization-server
+    status: 404
+  - path: /.well-known/oauth-protected-resource
+    status: 404
+  - path: /.well-known/api-catalog
+    status: 404
+  - path: /.well-known/ai-plugin.json
+    status: 404
+  - path: /.well-known/agent-card.json
+    status: 404
+  - path: /.well-known/agent.json
+    status: 404
+  - path: /.well-known/aauth-resource.json
+    status: 404
+  - path: /.well-known/ucp.json
+    status: 404
+  - path: /.well-known/apis.json
+    status: 404
+  - path: /apis.json
+    status: 301
+  - path: /apis.yml
+    status: 301
+  - path: /llms.txt
+    status: 301
+  - path: /.well-known/aignostics-negative-control-7f3ab91c.json
+    status: 404
+    note: negative control - correctly 404, host does not echo paths
+- host: https://www.aignostics.com
+  documents:
+  - path: /.well-known/security.txt
+    status: 404
+  - path: /.well-known/openid-configuration
+    status: 404
+  - path: /.well-known/oauth-authorization-server
+    status: 404
+  - path: /.well-known/oauth-protected-resource
+    status: 404
+  - path: /.well-known/api-catalog
+    status: 404
+  - path: /.well-known/ai-plugin.json
+    status: 404
+  - path: /.well-known/agent-card.json
+    status: 404
+  - path: /.well-known/agent.json
+    status: 404
+  - path: /.well-known/aauth-resource.json
+    status: 404
+  - path: /.well-known/ucp.json
+    status: 404
+  - path: /.well-known/apis.json
+    status: 404
+  - path: /apis.json
+    status: 404
+  - path: /apis.yml
+    status: 404
+  - path: /llms.txt
+    status: 404
+  - path: /.well-known/aignostics-negative-control-7f3ab91c.json
+    status: 404
+    note: negative control - correctly 404
+- host: https://platform.aignostics.com
+  note: >-
+    Every path returns 307 to /auth0-api/auth/login, including the negative control. No anonymous
+    discovery surface; this is a session gate, not a served document.
+  documents:
+  - path: /.well-known/security.txt
+    status: 307
+  - path: /.well-known/openid-configuration
+    status: 307
+  - path: /.well-known/oauth-authorization-server
+    status: 307
+  - path: /.well-known/oauth-protected-resource
+    status: 307
+  - path: /.well-known/api-catalog
+    status: 307
+  - path: /.well-known/ai-plugin.json
+    status: 307
+  - path: /.well-known/agent-card.json
+    status: 307
+  - path: /.well-known/agent.json
+    status: 307
+  - path: /.well-known/aauth-resource.json
+    status: 307
+  - path: /.well-known/apis.json
+    status: 307
+  - path: /apis.json
+    status: 307
+  - path: /apis.yml
+    status: 307
+  - path: /llms.txt
+    status: 307
+  - path: /.well-known/aignostics-negative-control-7f3ab91c.json
+    status: 307
+    note: negative control also 307 - confirms a blanket gate, not a document
+- host: https://portal.aignostics.com
+  hit_count: 0
+  soft_404_control:
+    path: /.well-known/aignostics-negative-control-7f3ab91c.json
+    status: 200
+    bytes: 568
+    verdict: >-
+      SPA catch-all. Every probed path, including one that cannot exist, returned the same
+      568-byte HTML shell. No document on this host is recorded and no pointer is emitted for it.
+  documents:
+  - path: /.well-known/security.txt
+    status: 200
+    note: HTML SPA shell, not a document - discarded by the negative control
+  - path: /.well-known/agent-card.json
+    status: 200
+    note: HTML SPA shell, not an agent card - discarded by the negative control
+  - path: /.well-known/openid-configuration
+    status: 200
+    note: HTML SPA shell, not a document - discarded by the negative control
+  - path: /apis.json
+    status: 200
+    note: HTML SPA shell, not an APIs.json index - discarded by the negative control
+  - path: /.well-known/aignostics-negative-control-7f3ab91c.json
+    status: 200
+    note: negative control returned 200 - host echoes every path
+- host: https://aignostics.readthedocs.io
+  documents:
+  - path: /.well-known/security.txt
+    status: 404
+  - path: /.well-known/openid-configuration
+    status: 404
+  - path: /.well-known/api-catalog
+    status: 404
+  - path: /.well-known/agent-card.json
+    status: 404
+  - path: /.well-known/agent.json
+    status: 404
+  - path: /.well-known/apis.json
+    status: 404
+  - path: /apis.json
+    status: 404
+  - path: /llms.txt
+    status: 404
+    note: docs host publishes no llms.txt
+  - path: /.well-known/aignostics-negative-control-7f3ab91c.json
+    status: 404
+    note: negative control - correctly 404
+- host: https://aignostics-platform.eu.auth0.com
+  note: >-
+    Aignostics' dedicated Auth0 tenant - the authorization server named by the
+    OAuth2AuthorizationCodeBearer securityScheme in the published OpenAPI and by the device-code
+    flow in the API getting-started guide. Third-party infrastructure, first-party tenant.
+  documents:
+  - path: /.well-known/openid-configuration
+    status: 200
+    file: aignostics-openid-configuration.json
+  - path: /.well-known/oauth-authorization-server
+    status: 200
+    note: identical body to the OIDC document; not saved separately
+  - path: /.well-known/jwks.json
+    status: 200
+    note: RSA signing keys; not saved (key material rotates)
+  - path: /.well-known/security.txt
+    status: 404
+  - path: /.well-known/agent-card.json
+    status: 404
+  - path: /.well-known/aauth-resource.json
+    status: 404
+  - path: /.well-known/aignostics-negative-control-7f3ab91c.json
+    status: 404
+    note: negative control - correctly 404
+pointer_emitted: false
+pointer_reason: >-
+  No WellKnown and no SecurityTxt pointer is wired into apis.yml. Aignostics' own hosts serve no
+  discovery document at all: the registrable domain 404s every /.well-known/* path, the Platform host
+  gates every path behind an Auth0 session, and the portal host is an SPA catch-all that fails the
+  negative control. The only documents that returned 200 are the OIDC/RFC 8414 metadata and JWKS that
+  Auth0 serves automatically for every tenant on its own domain - real, and genuinely the
+  authorization server this API points at, but not a surface Aignostics publishes. Crediting it as
+  one would be crediting the identity vendor's default. Recorded as evidence in
+  conformance/aignostics-conformance.yml and authentication/aignostics-authentication.yml instead.
+summary:
+  hosts_probed: 6
+  documents_served: 3
+  security_txt: false
+  api_catalog: false
+  agent_card: false
+  apis_json: false
+  openid_configuration: true

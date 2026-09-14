@@ -1,0 +1,91 @@
+generated: '2026-09-14'
+method: derived
+source: >-
+  openapi/aignostics-platform-api-openapi.json, mcp/aignostics-mcp.yml,
+  https://github.com/aignostics/python-sdk/blob/main/src/aignostics/utils/_mcp.py
+summary: >-
+  Aignostics has both an OpenAPI contract and an MCP server, so the crosswalk is emitted - but it
+  is empty on the tool side, and that emptiness is the finding. The MCP server ships in the Python
+  SDK and mounts FastMCP instances discovered at runtime from the package and from installed plugin
+  entry points; no FastMCP instance is defined in the SDK's own modules, so a stock install exposes
+  no first-party tools. Nothing can be bound to an operationId with observed evidence. Every one of
+  the 26 published REST operations is therefore rest_only today.
+surfaces:
+- kind: openapi
+  url: https://platform.aignostics.com/api/v1/openapi.json
+  local: openapi/aignostics-platform-api-openapi.json
+  gated: false
+  note: served unauthenticated; the API it describes requires an OAuth bearer token
+- kind: mcp
+  url: null
+  transport: stdio
+  install: uv run aignostics mcp run
+  gated: true
+  note: >-
+    local-stdio only. tools/list is unreachable without installing the SDK and completing a
+    device-code OAuth login, so no live tool schema was observed.
+- kind: graphql
+  url: null
+  note: no GraphQL surface exists
+crosswalk: []
+mcp_only: []
+rest_only:
+- operation: list_applications_v1_applications_get
+  path: GET /v1/applications
+- operation: read_application_by_id_v1_applications__application_id__get
+  path: GET /v1/applications/{application_id}
+- operation: application_version_details_v1_applications__application_id__versions__version__get
+  path: GET /v1/applications/{application_id}/versions/{version}
+- operation: list_version_documents
+  path: GET /v1/applications/{application_id}/versions/{version}/documents
+- operation: get_version_document
+  path: GET /v1/applications/{application_id}/versions/{version}/documents/{name}
+- operation: get_version_document_file
+  path: GET /v1/applications/{application_id}/versions/{version}/documents/{name}/file
+- operation: get_version_document_content
+  path: GET /v1/applications/{application_id}/versions/{version}/documents/{name}/content
+- operation: list_runs_v1_runs_get
+  path: GET /v1/runs
+- operation: create_run_v1_runs_post
+  path: POST /v1/runs
+- operation: get_run_v1_runs__run_id__get
+  path: GET /v1/runs/{run_id}
+- operation: cancel_run_v1_runs__run_id__cancel_post
+  path: POST /v1/runs/{run_id}/cancel
+- operation: list_run_items_v1_runs__run_id__items_get
+  path: GET /v1/runs/{run_id}/items
+- operation: get_item_by_run_v1_runs__run_id__items__external_id__get
+  path: GET /v1/runs/{run_id}/items/{external_id}
+- operation: get_artifact_url_v1_runs__run_id__artifacts__artifact_id__file_get
+  path: GET /v1/runs/{run_id}/artifacts/{artifact_id}/file
+- operation: delete_run_items_v1_runs__run_id__artifacts_delete
+  path: DELETE /v1/runs/{run_id}/artifacts
+- operation: put_run_custom_metadata_v1_runs__run_id__custom_metadata_put
+  path: PUT /v1/runs/{run_id}/custom-metadata
+- operation: put_item_custom_metadata_by_run_v1_runs__run_id__items__external_id__custom_metadata_put
+  path: PUT /v1/runs/{run_id}/items/{external_id}/custom-metadata
+- operation: create_grant_v1_access_grants_post
+  path: POST /v1/access/grants
+- operation: list_grants_v1_access_grants_get
+  path: GET /v1/access/grants
+- operation: get_grant_v1_access_grants__grant_id__get
+  path: GET /v1/access/grants/{grant_id}
+- operation: revoke_grant_v1_access_grants__grant_id__delete
+  path: DELETE /v1/access/grants/{grant_id}
+- operation: create_share_token_v1_access_share_tokens_post
+  path: POST /v1/access/share-tokens
+- operation: list_share_tokens_v1_access_share_tokens_get
+  path: GET /v1/access/share-tokens
+- operation: get_share_token_v1_access_share_tokens__share_token_id__get
+  path: GET /v1/access/share-tokens/{share_token_id}
+- operation: revoke_share_token_v1_access_share_tokens__share_token_id__delete
+  path: DELETE /v1/access/share-tokens/{share_token_id}
+- operation: get_me_v1_me_get
+  path: GET /v1/me
+coverage:
+  rest_operations: 26
+  mcp_tools_observed: 0
+  bound: 0
+  mcp_only: 0
+  rest_only: 26
+  bound_pct: 0.0

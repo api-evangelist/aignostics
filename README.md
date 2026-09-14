@@ -64,5 +64,52 @@
 > Full detail: **[Where this data comes from](https://apievangelist.com/about/where-our-data-comes-from)**
 <!-- API-EVANGELIST-PROVENANCE:END -->
 
-Aignostics is a company surfaced via the API Evangelist harvest backlog (source: secondary-market) and added to the network as a stub for full-pipeline profiling.
-- https://equityzen.com/company/aignostics
+Aignostics GmbH (Berlin, Germany) builds AI foundation models and analysis applications for
+computational pathology. The commercial surface is the **Aignostics Platform** — a cloud service that
+runs pathology applications over whole slide images on dedicated GPU infrastructure, with Atlas
+H&E-TME tumor-microenvironment profiling as the flagship.
+
+## API surface
+
+| | |
+|---|---|
+| API | Aignostics Platform API |
+| Base URL | `https://platform.aignostics.com/api/v1` |
+| Contract | OpenAPI 3.1.0 — 26 operations, 45 schemas, `info.version` 1.8.0 |
+| Contract URL | <https://platform.aignostics.com/api/v1/openapi.json> (public, unauthenticated) |
+| Auth | OAuth 2.0 bearer — authorization-code and device-code (RFC 8628) against an Auth0 tenant |
+| Access | Organization subscription. No anonymous access, no API keys, no self-serve signup. |
+
+The contract was captured from the live host, not from the copy vendored in the SDK repository —
+that copy was still at `1.4.0` with 14 operations and pointed its OAuth URLs at a **staging** Auth0
+tenant on the day the live document served `1.8.0` with 26 operations against production.
+
+## Links
+
+- Documentation — <https://aignostics.readthedocs.io/en/latest/>
+- Get started with the API — <https://aignostics.readthedocs.io/en/latest/get_started_api.html>
+- Status — <https://status.aignostics.com/> (Better Stack; JSON, RSS and Atom feeds)
+- GitHub — <https://github.com/aignostics>
+- Python SDK — <https://pypi.org/project/aignostics/> · TypeScript SDK — <https://www.npmjs.com/package/@aignostics/sdk>
+- Company — <https://www.aignostics.com/>
+
+## Notable findings
+
+- **No idempotency.** The docs state plainly that `POST /v1/runs` is not idempotent — calling it
+  twice analyzes the slides twice, and bills twice. No `Idempotency-Key` exists anywhere in the spec.
+- **Strong reversibility.** Every costly or destructive write has a named reversal with a *stated*
+  window: cancel any time before `TERMINATED` (pending items "will not add to the cost"), revoke a
+  grant or share token at any time. Artifact deletion is the one-way exception, and artifacts are
+  auto-deleted 30 days after a run finishes regardless.
+- **402, not 429.** The only exhaustion signal is a commercial quota (slides per run, monthly slides)
+  whose values are unpublished. No rate-limit headers, no `Retry-After`.
+- **Domain standards in the contract.** `application/dicom` is an accepted input media type, and
+  `ApplicationReadResponse.regulatory_classes` enumerates `RUO`, `IVDR`, `FDA` per application.
+- **MCP ships but is dark.** `aignostics mcp run` starts a real stdio MCP server inside the Python
+  SDK, but no FastMCP tools are registered in-tree, and the customer guide is withdrawn (404).
+- **`GET /v1/me` returns credentials** — the organization's GCS HMAC secret access key, a Logfire
+  token and a Sentry DSN. Do not log or cache that response.
+- **No pricing, no terms, no `security.txt`.** A vulnerability disclosure process does exist, in the
+  SDK's security policy.
+
+Harvest source: <https://equityzen.com/company/aignostics>

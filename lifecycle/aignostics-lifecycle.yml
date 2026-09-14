@@ -1,0 +1,117 @@
+generated: '2026-09-14'
+method: searched
+source: >-
+  https://status.aignostics.com/, https://aignostics.readthedocs.io/en/latest/release-notes.html,
+  https://aignostics.readthedocs.io/en/latest/operational_excellence.html,
+  openapi/aignostics-platform-api-openapi.json
+api: Aignostics Platform API
+versioning:
+  api:
+    style: path
+    current: v1
+    spec_version_observed: 1.8.0
+    observed_at: '2026-09-14'
+    note: >-
+      The URI major version is v1. The OpenAPI info.version moves independently and is not surfaced
+      in any response header - the copy vendored in the SDK repo at
+      docs/source/_static/openapi_v1.json was still 1.4.0 with 14 operations on the day the live
+      document served 1.8.0 with 26. A consumer generating a client from the repo copy gets a client
+      that is missing the entire /v1/access grant and share-token surface and all four application
+      version document operations.
+  sdk:
+    style: semver
+    current: 1.5.0
+    released: '2026-08-13'
+  applications:
+    style: semver per application version
+    note: >-
+      Computational pathology applications carry their own semantic versions. POST /v1/runs takes an
+      optional version_number; omitting it selects "the latest version available to you", so an
+      unpinned submission is not reproducible across an application release. Pin version_number for
+      any workflow whose results must be comparable over time.
+deprecation:
+  policy_published: false
+  sunset_header: false
+  deprecation_header: false
+  deprecated_operations: []
+  detail: >-
+    No deprecation policy, no RFC 8594 Sunset/Deprecation headers, and no operation in the 26-operation
+    contract carries `deprecated: true`. The release notes announce additions and fixes but record no
+    removals or deprecation notices. Nothing tells a consumer how much notice they would get.
+support_policy:
+  scope: sdk
+  statement: We currently provide security updates for the latest minor version.
+  source: https://aignostics.readthedocs.io/en/latest/security.html
+  note: This is the SDK's support window. No equivalent statement exists for the Platform API itself.
+data_retention:
+  artifacts:
+    window_days: 30
+    statement: >-
+      "all artifacts are automatically deleted 30 days after the run finishes, regardless of whether
+      the caller explicitly requests such deletion"
+    source: openapi/aignostics-platform-api-openapi.json (delete_run_items description)
+  upload_bucket:
+    window_days: 30
+    statement: >-
+      "Dedicated Google Cloud Storage bucket per organization with automatic 30-day cleanup"
+    source: https://github.com/aignostics/python-sdk/blob/main/README.md
+status_page:
+  url: https://status.aignostics.com/
+  provider: Better Stack
+  http_status: 200
+  machine_readable:
+  - format: json
+    url: https://status.aignostics.com/index.json
+    http_status: 200
+  - format: rss
+    url: https://status.aignostics.com/feed.rss
+    http_status: 200
+  - format: atom
+    url: https://status.aignostics.com/feed.atom
+    http_status: 200
+  components:
+    platform_production:
+    - Platform
+    - Applications
+    - API
+    - Authentication
+    - Console
+    - Python SDK
+    portal_production:
+    - Production Environment
+    corporate:
+    - Website
+    - Career Site
+    platform_staging:
+    - Platform
+    - Applications
+    - API
+    - Authentication
+    - Portal
+  history_window_days: 30
+  notifications:
+  - rss
+  - atom
+  - json
+  - webhook
+  - slack
+  observed_at: '2026-09-14'
+  observed_state: >-
+    "Some services are degraded" - Python SDK degraded 2026-09-07 through 2026-09-14; all other
+    production components operational.
+  note: >-
+    A genuinely good status surface for a company this size: per-component, staging included, with
+    30-day uptime history and three machine-readable feeds. It is not linked from the documentation
+    site or from aignostics.com, which is why it is easy to miss.
+sla:
+  published: false
+  detail: >-
+    No uptime or response-time commitment is published. operational_excellence.html describes the
+    SDK's engineering practice - Sentry, Logfire, SonarQube, CodeQL, pip-audit, trivy, Dependabot,
+    SBOM generation - and notes uptime monitoring is "prepared for", but states no customer-facing
+    target.
+release_cadence:
+  source: https://github.com/aignostics/python-sdk/releases
+  observed: >-
+    8 minor/patch releases between 2025-12-17 and 2026-08-13 for the SDK; the live API document moved
+    from 1.4.0 to 1.8.0 over roughly the same period.

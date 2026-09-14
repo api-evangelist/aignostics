@@ -1,0 +1,96 @@
+generated: '2026-09-14'
+method: searched
+source: >-
+  https://github.com/aignostics/python-sdk/blob/main/src/aignostics/cli.py,
+  https://github.com/aignostics/python-sdk/blob/main/src/aignostics/utils/_mcp.py,
+  https://github.com/aignostics/python-sdk/blob/main/README.md,
+  https://aignostics.readthedocs.io/en/latest/release-notes.html
+name: Central Aignostics MCP Server
+status: shipped-undocumented
+deployment:
+  mode: local-stdio
+  install: uv run aignostics mcp run
+  package: https://pypi.org/project/aignostics/
+  auth: oauth
+  verified: searched
+summary: >-
+  Aignostics ships a runnable MCP server inside its Python SDK. `aignostics mcp run` starts a
+  FastMCP server over stdio transport (MCP_TRANSPORT = "stdio" in utils/_mcp.py) named
+  "Central Aignostics MCP Server", and `aignostics mcp list-tools` prints the discovered tool set.
+  It was introduced in SDK v1.1.0 (2026-02-10, "central MCP server with auto-discovery of plugin
+  tools"). There is NO remote/hosted MCP endpoint - nothing for an agent to POST to without a
+  local install - and the customer-facing guide has been withdrawn.
+findings:
+- id: no-remote-endpoint
+  detail: >-
+    No hosted MCP URL is published anywhere on aignostics.com, platform.aignostics.com or the
+    documentation. A human must install the Python SDK and authenticate a device-code OAuth session
+    before any agent can reach the platform through MCP.
+- id: guide-withdrawn
+  detail: >-
+    The README block describing the MCP server is commented out with the note "Hidden for now: the
+    MCP server is not yet usable for customers", and
+    https://aignostics.readthedocs.io/en/latest/get_started_mcp.html returns HTTP 404. The code
+    ships in the published PyPI distribution regardless.
+- id: zero-first-party-tools-in-tree
+  detail: >-
+    mcp_create_server() mounts every FastMCP instance found by locate_implementations(FastMCP)
+    across the aignostics package and any installed plugin entry points. No FastMCP instance is
+    defined anywhere in the SDK's own modules (application, bucket, dataset, platform, qupath,
+    system, wsi, utils were each checked), so a stock install exposes the mount machinery and no
+    first-party tools. The tool surface is therefore a runtime property of which plugins are
+    installed, not a published manifest - it cannot be enumerated without installing and running.
+transport: stdio
+discovery:
+  mechanism: uv run aignostics mcp list-tools
+  note: runtime enumeration only; no static tool manifest is published
+tools:
+  status: candidate
+  basis: >-
+    Derived from the 26 operations of the published Aignostics Platform API OpenAPI as the tool set
+    an MCP server over this platform would plausibly expose. These are NOT observed tools - no
+    tools/list was reachable, because the server is stdio-only and requires an authenticated local
+    install. Treat as a mapping proposal, not a provider claim.
+  source: openapi/aignostics-platform-api-openapi.json
+  candidates:
+  - name: list_applications
+    rest: list_applications_v1_applications_get
+  - name: get_application
+    rest: read_application_by_id_v1_applications__application_id__get
+  - name: get_application_version
+    rest: application_version_details_v1_applications__application_id__versions__version__get
+  - name: list_version_documents
+    rest: list_version_documents
+  - name: get_version_document
+    rest: get_version_document
+  - name: list_runs
+    rest: list_runs_v1_runs_get
+  - name: create_run
+    rest: create_run_v1_runs_post
+  - name: get_run
+    rest: get_run_v1_runs__run_id__get
+  - name: cancel_run
+    rest: cancel_run_v1_runs__run_id__cancel_post
+  - name: list_run_items
+    rest: list_run_items_v1_runs__run_id__items_get
+  - name: get_run_item
+    rest: get_item_by_run_v1_runs__run_id__items__external_id__get
+  - name: get_artifact_url
+    rest: get_artifact_url_v1_runs__run_id__artifacts__artifact_id__file_get
+  - name: delete_run_artifacts
+    rest: delete_run_items_v1_runs__run_id__artifacts_delete
+  - name: set_run_metadata
+    rest: put_run_custom_metadata_v1_runs__run_id__custom_metadata_put
+  - name: whoami
+    rest: get_me_v1_me_get
+x-evidence:
+  probed: '2026-09-14'
+  remote_endpoint_probes:
+  - url: https://platform.aignostics.com/mcp
+    status: 307
+    note: Auth0 session gate, not an MCP endpoint
+  - url: https://mcp.aignostics.com/
+    status: 0
+    note: DNS does not resolve
+  - url: https://aignostics.readthedocs.io/en/latest/get_started_mcp.html
+    status: 404

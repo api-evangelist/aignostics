@@ -1,0 +1,67 @@
+generated: '2026-09-14'
+method: searched
+source: >-
+  openapi/aignostics-platform-api-openapi.json,
+  https://aignostics.readthedocs.io/en/latest/get_started_api.html
+api: Aignostics Platform API
+limit_count: 0
+headers: []
+status_on_exhaustion: 402
+summary: >-
+  No request-rate limit is published and none is signalled at runtime. The contract declares no 429
+  response on any of its 26 operations, no Retry-After, and no RateLimit-* or X-RateLimit-* response
+  header; the documentation states no per-key or per-account request ceiling. The only throttle that
+  exists in the contract is a commercial quota on work submitted, not on requests made.
+rate_limits: []
+quotas:
+- scope: per-run
+  dimension: slides
+  limit: null
+  window: per run
+  enforcement_status: 402
+  operation: create_run_v1_runs_post
+  published: false
+  source: openapi/aignostics-platform-api-openapi.json (402 response description)
+- scope: per-organization
+  dimension: slides
+  limit: null
+  window: monthly
+  enforcement_status: 402
+  operation: create_run_v1_runs_post
+  published: false
+  source: openapi/aignostics-platform-api-openapi.json (402 response description)
+runtime_signals:
+- signal: queue_position_org
+  where: ItemResultReadResponse
+  meaning: the item's position in the organization's own processing queue
+- signal: queue_position_platform
+  where: ItemResultReadResponse
+  meaning: the item's position in the platform-wide queue
+  note: >-
+    These two fields are the closest thing the API has to a throughput signal. They are backpressure
+    information a caller can actually act on - unusual to publish - but they describe the analysis
+    queue, not HTTP request limiting, and they arrive only after an item is accepted.
+- signal: SchedulingRequest.due_date
+  meaning: requested completion time; items are prioritized to meet this target
+- signal: SchedulingRequest.deadline
+  meaning: hard deadline - "The run will be cancelled if not completed by this time"
+  note: >-
+    A caller-set deadline that the platform enforces by cancelling. Combined with the cancellation
+    cost rule, this is a real spend guardrail for an autonomous agent.
+retry_guidance:
+  source: https://aignostics.readthedocs.io/en/latest/get_started_api.html
+  statement: >-
+    "Retry 5xx, timeouts, and connection errors with exponential backoff and jitter; never 4xx."
+  note: >-
+    Backoff is prescribed but unparameterised - no base delay, no cap, no maximum attempts, and no
+    server-supplied Retry-After to key off. An agent has to pick its own numbers.
+gaps:
+- id: no-429
+  detail: >-
+    With no 429 and no rate-limit headers, a client cannot distinguish "you are going too fast" from
+    "the service is unwell" - both surface as 5xx or a timeout, and the retry guidance treats them
+    identically.
+- id: quota-values-unpublished
+  detail: >-
+    An integrator cannot size a batch job in advance. The per-run and monthly slide ceilings are
+    discoverable only by hitting 402, which is a runtime failure rather than a planning input.

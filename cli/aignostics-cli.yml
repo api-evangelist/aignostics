@@ -1,0 +1,71 @@
+generated: '2026-09-14'
+method: searched
+source: >-
+  https://github.com/aignostics/python-sdk/blob/main/src/aignostics/cli.py,
+  https://pypi.org/project/aignostics/,
+  https://github.com/aignostics/typescript-sdk
+name: Aignostics CLI
+status: shipped-undocumented
+summary: >-
+  Two first-party CLIs exist. The Python one ships inside the `aignostics` PyPI distribution and is
+  the one referenced by the package summary; the TypeScript one is published separately as
+  @aignostics/cli. Neither has a live documentation page: the SDK README's CLI block is commented out
+  ("Hidden for now: Console is the single graphical interface, the Python Library and REST API the
+  programmatic ones") and https://aignostics.readthedocs.io/en/latest/get_started_cli.html returns
+  HTTP 404. The command surface recorded below is read from the shipped source, not from docs.
+clis:
+- name: aignostics
+  language: python
+  package: https://pypi.org/project/aignostics/
+  version: 1.5.0
+  install:
+  - uv tool install aignostics
+  - uvx aignostics
+  - uv run aignostics
+  framework: typer
+  entrypoint: src/aignostics/cli.py
+  help: Command Line Interface (CLI) of Aignostics Python SDK providing access to Aignostics Platform.
+  commands:
+  - name: launchpad
+    description: >-
+      Open Aignostics Launchpad, the graphical user interface of the Aignostics Platform.
+    conditional: registered only when nicegui and webview are installed and not running in a container
+  - name: notebook
+    description: Run a Python notebook server based on Marimo.
+    flags:
+    - --host (default 127.0.0.1)
+    - --port (default 8001)
+    - --override-if-exists
+    args:
+    - notebook path (default <sdk-install-dir>/notebook/_notebook.py)
+    conditional: registered only when marimo is installed
+  - name: mcp run
+    description: >-
+      Run the MCP server over stdio transport, auto-mounting tools discovered from the SDK and any
+      installed plugins.
+  - name: mcp list-tools
+    description: List all available MCP tools with name and description.
+  command_groups_in_tree:
+    note: >-
+      Each SDK module carries its own _cli.py (application, bucket, dataset, platform, qupath,
+      system, utils, wsi), so the installed CLI registers further command groups beyond those
+      declared in cli.py itself. Those are assembled at import time by prepare_cli() and were not
+      enumerated statically; run `aignostics --help` against an install for the full tree.
+- name: aignostics (node)
+  language: typescript
+  package: https://www.npmjs.com/package/@aignostics/cli
+  version: 4.0.0
+  published: '2026-07-29'
+  install:
+  - npm install -g @aignostics/cli
+  source: https://github.com/aignostics/typescript-sdk
+  commands:
+    note: >-
+      Not enumerated. The monorepo builds it under packages/cli and publishes to npm, but no README,
+      documentation page or registry description lists the command surface.
+gaps:
+- id: cli-docs-404
+  detail: >-
+    https://aignostics.readthedocs.io/en/latest/get_started_cli.html returns 404 while the CLI is
+    still shipped in the published package and still named in the PyPI summary. A user who reads the
+    package description and follows the link lands on a missing page.

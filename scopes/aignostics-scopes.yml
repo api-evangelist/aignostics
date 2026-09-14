@@ -1,0 +1,69 @@
+generated: '2026-09-14'
+method: searched
+source: >-
+  openapi/aignostics-platform-api-openapi.json,
+  https://aignostics-platform.eu.auth0.com/.well-known/openid-configuration,
+  https://aignostics.readthedocs.io/en/latest/get_started_api.html
+docs: https://aignostics.readthedocs.io/en/latest/get_started_api.html
+api: Aignostics Platform API
+summary: >-
+  The API declares OAuth 2.0 but publishes no API scopes. The securityScheme's scopes object is
+  empty, no operation carries a security requirement naming a scope, and no scope or permission
+  reference page exists in the documentation. Authorization is not expressed as scopes at all - it is
+  evaluated server-side from the caller's organization membership and from the grant/share-token
+  graph, which is why 15 distinct 403 variants exist in the contract while zero scopes do.
+scheme_scopes: []
+scopes: []
+schemes:
+- name: OAuth2AuthorizationCodeBearer
+  source: openapi/aignostics-platform-api-openapi.json
+  declared_scopes: 0
+  flows:
+  - flow: authorizationCode
+    authorizationUrl: https://aignostics-platform.eu.auth0.com/authorize
+    tokenUrl: https://aignostics-platform.eu.auth0.com/oauth/token
+  - flow: deviceCode
+    tokenUrl: https://aignostics-platform.eu.auth0.com/oauth/token
+    requested_scope: offline_access
+    audience: https://aignostics-platform-samia
+    source: https://aignostics.readthedocs.io/en/latest/get_started_api.html
+identity_scopes:
+  note: >-
+    These are the OIDC scopes the Auth0 tenant advertises. They govern the identity token, NOT access
+    to any Platform API resource, and are listed here only so the distinction is on the record.
+  source: https://aignostics-platform.eu.auth0.com/.well-known/openid-configuration
+  supported:
+  - openid
+  - profile
+  - offline_access
+  - name
+  - given_name
+  - family_name
+  - nickname
+  - email
+  - email_verified
+  - picture
+  - created_at
+  - identities
+  - phone
+  - address
+authorization_model:
+  style: relationship-based (Zanzibar-shaped)
+  primitives:
+    resource_types: [run, item, output_artifact, share_token]
+    subject_types: [user, organization_admin, organization_user, share_token]
+    relations: [owner, editor, viewer]
+  creatable_through_api: [viewer]
+  note: >-
+    The access surface that scopes would normally cover is instead exposed as first-class API
+    resources - /v1/access/grants and /v1/access/share-tokens - which is a more expressive model than
+    scopes, and is auditable and revocable at runtime. The cost is that a bearer token carries no
+    intrinsic limit: an agent holding a user token can do everything that user can do, including
+    submitting billable runs, and there is no way to mint a read-only token for it. A share token is
+    the nearest equivalent, and it only covers reading an already-existing run.
+gaps:
+- id: no-least-privilege-token
+  detail: >-
+    With zero scopes, a delegated agent cannot be given a narrower credential than the human it acts
+    for. Defining even two scopes - read and submit - would let an integrator hand an autonomous
+    client a token that cannot incur GPU cost.

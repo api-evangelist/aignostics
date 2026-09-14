@@ -1,0 +1,74 @@
+generated: '2026-09-14'
+method: searched
+source: >-
+  https://pypi.org/pypi/aignostics/json, https://registry.npmjs.org/@aignostics/sdk,
+  https://registry.npmjs.org/@aignostics/cli, https://github.com/aignostics/python-sdk,
+  https://github.com/aignostics/typescript-sdk
+notes: >-
+  Two first-party client families, both open source under the aignostics GitHub org. The Python SDK
+  is the flagship and the only one the documentation links; the TypeScript SDK and CLI are published
+  under the org-owned @aignostics npm scope from the aignostics/typescript-sdk monorepo, whose
+  package.json carries a codegen/update-spec pipeline that generates the client from the same
+  OpenAPI document captured in openapi/. No Maven, NuGet, Go module, RubyGems, Packagist or
+  crates.io package exists for this provider - searched, absent.
+packages:
+- language: python
+  registry: pypi
+  name: aignostics
+  url: https://pypi.org/project/aignostics/
+  install: uv tool install aignostics
+  official: true
+  version: 1.5.0
+  published: '2026-08-13'
+  source: https://github.com/aignostics/python-sdk
+  license: MIT
+  requires_python: '>=3.11,<3.15'
+  development_status: 3 - Alpha
+  releases_total: 135
+  note: >-
+    One distribution carrying four interfaces - Aignostics Launchpad (desktop GUI), the Aignostics
+    CLI, the Python client library, and an MCP (stdio) server. Release cadence is active; 135
+    releases, latest one month before this probe.
+- language: typescript
+  registry: npm
+  name: "@aignostics/sdk"
+  url: https://www.npmjs.com/package/@aignostics/sdk
+  install: npm install @aignostics/sdk
+  official: true
+  version: 3.8.1
+  published: '2026-07-29'
+  source: https://github.com/aignostics/typescript-sdk
+  note: >-
+    Published under the org-owned @aignostics npm scope by maintainers santiago-aignx,
+    verascheunert and mk9; built in the aignostics/typescript-sdk monorepo. The npm manifest
+    carries no repository or homepage field, so the link back to the source repo is ours, read
+    from the monorepo workspace definition rather than from registry metadata.
+- language: typescript
+  registry: npm
+  name: "@aignostics/cli"
+  url: https://www.npmjs.com/package/@aignostics/cli
+  install: npm install -g @aignostics/cli
+  official: true
+  version: 4.0.0
+  published: '2026-07-29'
+  source: https://github.com/aignostics/typescript-sdk
+  note: >-
+    Node CLI sibling of the TypeScript SDK, same monorepo and scope. Undocumented on
+    aignostics.readthedocs.io, which covers only the Python interfaces.
+registries_searched:
+- registry: npm
+  result: 2 first-party packages under the @aignostics scope
+- registry: pypi
+  result: 1 first-party package (aignostics)
+- registry: maven-central
+  result: none
+- registry: nuget
+  result: none
+- registry: pkg.go.dev
+  result: none
+- registry: rubygems
+  result: none
+- registry: packagist
+  result: none
+- registry: crates.io
+  result: none

@@ -1,0 +1,166 @@
+generated: '2026-09-14'
+method: derived
+source: >-
+  openapi/aignostics-platform-api-openapi.json (all declared 4xx responses across 26 operations),
+  enriched from https://aignostics.readthedocs.io/en/latest/get_started_api.html
+api: Aignostics Platform API
+format: fastapi-detail
+rfc9457: false
+envelope:
+  typed_responses:
+  - status: 422
+    schema: HTTPValidationError
+    media_type: application/json
+    shape: '{"detail": [{"loc": ["body", "items", 0, "reference"], "msg": "...", "type": "..."}]}'
+  untyped_responses:
+    note: >-
+      Every non-422 error status (400, 401, 402, 403, 404, 409, 410, 412) is declared with a human
+      description and NO content schema and NO media type. A client can branch on the status code and
+      nothing else - there is no machine-readable error code, no type URI, and no remediation field.
+      This is the single largest error-semantics gap in the contract.
+  observed_bodies:
+  - status: 401
+    body: 'Jwt is missing'
+    observed_at: https://platform.aignostics.com/api/v1/applications
+    note: plain-text body, not JSON - observed live unauthenticated on 2026-09-14
+problem_types:
+- status: 400
+  title: Bad Request - Input validation failed
+  operations:
+  - create_run_v1_runs_post
+  meaning: >-
+    The run payload was structurally acceptable but failed business validation - bad slide metadata,
+    an unreachable input artifact URL, or a duplicate external_id within the run.
+  remediation: >-
+    Fix the payload and resubmit. Do not retry unchanged; the docs are explicit that 4xx must never
+    be retried.
+  retryable: false
+- status: 401
+  title: Unauthorized - Invalid or missing authentication
+  operations:
+  - list_applications_v1_applications_get
+  meaning: The bearer token is missing, malformed or expired.
+  remediation: >-
+    Renew the access token with the refresh_token grant against
+    https://aignostics-platform.eu.auth0.com/oauth/token, then replay the request once.
+  retryable: after-token-refresh
+- status: 402
+  title: Payment Required - quota exceeded
+  detail: A quota limit (slides per run, or monthly slides) would be exceeded by this run
+  operations:
+  - create_run_v1_runs_post
+  meaning: >-
+    The commercial throttle. This is the only exhaustion signal the API defines - there is no 429 and
+    no Retry-After anywhere in the contract.
+  remediation: >-
+    Reduce the number of slides in the run, wait for the monthly quota to reset, or contact the
+    account manager to raise the entitlement. The numeric limits are not published.
+  retryable: false
+- status: 403
+  title: Forbidden - insufficient permission on the addressed resource
+  operations_count: 15
+  meaning: >-
+    Authenticated but not entitled. The description is resource-specific in 15 distinct phrasings
+    ("You don't have permission to cancel this run", "...to download this artifact", "...to grant
+    access to this resource"), which makes the spec readable but gives the client no discriminator
+    beyond the status code.
+  remediation: >-
+    Confirm the caller's organization owns the resource, or that an active grant or a valid
+    share_token covers it. Request a viewer grant via POST /v1/access/grants from an account that
+    owns the run.
+  retryable: false
+- status: 404
+  title: Not Found
+  operations_count: 21
+  meaning: >-
+    The addressed application, application version, run, item, artifact, document, grant or share
+    token does not exist OR is not visible to the caller - the contract deliberately conflates the
+    two in several phrasings ("Application version with given ID is not available to you or does not
+    exist"), which is a sound anti-enumeration posture. One variant carries real information:
+    "Run not found because it was deleted."
+  remediation: >-
+    Re-list the parent collection to confirm the identifier, and check entitlement before assuming
+    the resource is gone.
+  retryable: false
+- status: 409
+  title: Conflict - state precondition on a lifecycle transition
+  operations:
+  - cancel_run_v1_runs__run_id__cancel_post
+  - delete_run_items_v1_runs__run_id__artifacts_delete
+  - revoke_grant_v1_access_grants__grant_id__delete
+  - revoke_share_token_v1_access_share_tokens__share_token_id__delete
+  variants:
+  - The Run is already cancelled
+  - The run has not terminated yet
+  - Grant is already revoked
+  - Share token is already revoked
+  meaning: >-
+    The reversal you asked for has already happened, or cannot happen yet. Because none of these
+    operations accepts an idempotency key, 409 is effectively the API's replay signal - a repeated
+    cancel or revoke is safe and self-announcing.
+  remediation: >-
+    Treat 409 on cancel/revoke as success-equivalent. Treat 409 on DELETE artifacts as "poll
+    GET /v1/runs/{run_id} until state is TERMINATED".
+  retryable: conditional
+- status: 410
+  title: Gone - artifact or run artifacts already deleted
+  operations:
+  - get_artifact_url_v1_runs__run_id__artifacts__artifact_id__file_get
+  - delete_run_items_v1_runs__run_id__artifacts_delete
+  meaning: >-
+    The output is permanently unavailable, either because it was explicitly deleted or because the
+    30-day automatic artifact retention window elapsed.
+  remediation: >-
+    Results cannot be recovered; the run must be resubmitted (and re-billed). Download artifacts
+    within 30 days of run completion.
+  retryable: false
+- status: 412
+  title: Precondition Failed - checksum mismatch, resource has been modified
+  operations:
+  - put_run_custom_metadata_v1_runs__run_id__custom_metadata_put
+  - put_item_custom_metadata_by_run_v1_runs__run_id__items__external_id__custom_metadata_put
+  meaning: >-
+    The checksum supplied with the custom-metadata write does not match the stored value - someone
+    else changed it since you read it.
+  remediation: >-
+    Re-read the current custom metadata and checksum from GET /v1/runs/{run_id} (or the item
+    endpoint), merge, and write again with the fresh checksum.
+  retryable: after-reread
+- status: 422
+  title: Validation Error
+  schema: HTTPValidationError
+  media_type: application/json
+  operations_count: 25
+  meaning: >-
+    FastAPI request-model validation failure. The only error status with a parseable body: a detail[]
+    array of {loc, msg, type} locating each offending field. One operation reuses 422 for a business
+    rule instead - POST /v1/access/grants returns "Unprocessable Entity - Only viewer grants can be
+    created" - so 422 is not purely syntactic.
+  remediation: Walk detail[].loc to find the offending field and correct it.
+  retryable: false
+redirects:
+- status: 307
+  title: Temporary Redirect to a short-lived signed storage URL
+  operations:
+  - get_artifact_url_v1_runs__run_id__artifacts__artifact_id__file_get
+  - get_version_document_file
+  - get_version_document_content
+  note: >-
+    Not an error, but load-bearing for clients: results and documents are delivered as presigned
+    Google Cloud Storage URLs with a short validity, served with Cache-Control: no-store. A client
+    that does not follow redirects, or that stores the signed URL, will fail.
+gaps:
+- id: no-error-codes
+  detail: >-
+    The API publishes no stable machine-readable error code registry. There is nothing to switch on
+    but HTTP status, and 403 (15 variants) and 404 (21 variants) each collapse many distinct causes
+    into one code.
+- id: not-rfc9457
+  detail: >-
+    No application/problem+json. Adopting RFC 9457 - a type URI plus a code per condition - would make
+    every one of the 15 forbidden variants and 13 not-found variants individually actionable by an
+    agent without string-matching English prose.
+- id: plain-text-401
+  detail: >-
+    The live gateway answers an unauthenticated request with the plain-text body "Jwt is missing"
+    rather than any JSON envelope, so even the 401 a client is most likely to hit is unparseable.

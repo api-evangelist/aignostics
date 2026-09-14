@@ -1,0 +1,36 @@
+generated: '2026-09-14'
+method: derived
+source: openapi/aignostics-platform-api-openapi.json
+api: Aignostics Platform API
+asyncapi_published: false
+webhooks_published: false
+summary: >-
+  There is no AsyncAPI document, no webhooks: block in the OpenAPI, no callbacks: on any operation,
+  and no webhook or event page in the documentation. Recorded here because the contract nonetheless
+  references an event surface that it does not describe.
+dangling_reference:
+  field: RunCreationRequest.callback_context
+  description_verbatim: >-
+    Opaque JSON object for caller-supplied correlation data. Stored verbatim and echoed in
+    state-change events. Max 1024 bytes after JSON serialization.
+  finding: >-
+    "state-change events" are named as a thing the platform emits, and a field exists whose only
+    purpose is to correlate a caller's own identifiers with them - but nothing in the published
+    surface says what those events are, how they are delivered, where to subscribe, or what shape
+    they take. Either the delivery mechanism is private to an enterprise integration, or the field
+    is ahead of the documentation. A caller reading only the contract cannot use it.
+consumption_model_today: polling
+polling_surface:
+- operation: get_run_v1_runs__run_id__get
+  purpose: run state (PENDING / PROCESSING / TERMINATED) and aggregate statistics
+- operation: list_run_items_v1_runs__run_id__items_get
+  purpose: per-item state, so results can be collected incrementally as slides finish
+note: >-
+  The platform is explicitly designed for incremental collection - "allowing you to retrieve results
+  for individual items as soon as they complete processing" - which is exactly the workload a push
+  event surface exists to serve. A documented webhook or AsyncAPI channel would remove the polling
+  loop every integrator currently has to write.
+pointer_emitted: false
+pointer_reason: >-
+  No AsyncAPI spec and no documented webhook catalog exists, so neither an AsyncAPI nor a Webhooks
+  pointer is wired into apis.yml. Recording the absence, not manufacturing a presence.

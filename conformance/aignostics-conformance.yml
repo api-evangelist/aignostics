@@ -1,0 +1,140 @@
+generated: '2026-09-14'
+method: derived
+source: >-
+  openapi/aignostics-platform-api-openapi.json,
+  https://aignostics-platform.eu.auth0.com/.well-known/openid-configuration,
+  https://aignostics.readthedocs.io/en/latest/get_started_api.html,
+  https://aignostics.readthedocs.io/en/latest/security.html
+api: Aignostics Platform API
+conformance:
+- id: openapi-3.1
+  conforms: true
+  evidence: >-
+    openapi/aignostics-platform-api-openapi.json declares openapi 3.1.0 and parses; served
+    unauthenticated at https://platform.aignostics.com/api/v1/openapi.json (HTTP 200,
+    application/json, 91,403 bytes, info.version 1.8.0, 26 operations, 45 component schemas).
+- id: oauth2
+  conforms: true
+  evidence: >-
+    components.securitySchemes.OAuth2AuthorizationCodeBearer declares type oauth2 with an
+    authorizationCode flow against https://aignostics-platform.eu.auth0.com/authorize and
+    /oauth/token.
+- id: oauth2-device-authorization-grant
+  standard: RFC 8628
+  conforms: true
+  evidence: >-
+    https://aignostics.readthedocs.io/en/latest/get_started_api.html documents the device-code flow
+    verbatim (POST /oauth/device/code, then poll /oauth/token with
+    grant_type=urn:ietf:params:oauth:grant-type:device_code); the Auth0 discovery document lists
+    urn:ietf:params:oauth:grant-type:device_code in grant_types_supported.
+- id: oidc
+  conforms: true
+  evidence: >-
+    https://aignostics-platform.eu.auth0.com/.well-known/openid-configuration returns HTTP 200 with
+    issuer, authorization_endpoint, token_endpoint, jwks_uri and scopes_supported including openid,
+    profile, email, offline_access.
+- id: oauth2-authorization-server-metadata
+  standard: RFC 8414
+  conforms: true
+  evidence: >-
+    https://aignostics-platform.eu.auth0.com/.well-known/oauth-authorization-server returns HTTP 200
+    with the same metadata document.
+- id: pagination
+  conforms: true
+  evidence: >-
+    page / page_size (default 50, min 5, max 100) plus a sort parameter on all five collection
+    endpoints. Not standardized on a header or link-relation scheme; page-number only, and the
+    parameter is misspelled `page-size` on GET /v1/applications.
+- id: rfc9457
+  conforms: false
+  evidence: >-
+    No application/problem+json in the contract. Only 422 carries a typed body
+    (HTTPValidationError, the FastAPI detail[] shape); every other error status is declared with a
+    prose description and no schema.
+- id: idempotency
+  conforms: false
+  evidence: >-
+    The string "idempoten" does not occur anywhere in the 91KB OpenAPI document, and
+    https://aignostics.readthedocs.io/en/latest/get_started_api.html states "POST /v1/runs is not
+    idempotent - calling it twice analyzes your slides twice."
+- id: rate-limit-headers
+  standard: draft-ietf-httpapi-ratelimit-headers
+  conforms: false
+  evidence: >-
+    No 429 response, no Retry-After, and no RateLimit-* or X-RateLimit-* header is declared on any
+    of the 26 operations.
+- id: asyncapi
+  conforms: false
+  evidence: >-
+    No AsyncAPI document and no webhook surface is published, although RunCreationRequest
+    .callback_context is described as "echoed in state-change events" - see
+    asyncapi/aignostics-event-surface.yml.
+- id: json-schema-2020-12
+  conforms: true
+  evidence: >-
+    OpenAPI 3.1.0 uses JSON Schema 2020-12 for all 45 component schemas, and application input
+    metadata is itself validated against a per-version JSON Schema delivered in
+    VersionReadResponse.input_artifacts[].metadata_schema.
+- id: http-conditional-write
+  conforms: partial
+  evidence: >-
+    Both custom-metadata PUTs support an optional checksum precondition returning 412 Precondition
+    Failed on mismatch - conditional-write semantics, but carried in the request body rather than
+    via If-Match/ETag headers, so no standard HTTP caching or concurrency tooling applies.
+domain_standards:
+- id: dicom
+  name: DICOM (Digital Imaging and Communications in Medicine)
+  conforms: true
+  signature: media-type-declaration
+  evidence: >-
+    The contract declares application/dicom as an accepted input artifact MIME type (alongside
+    application/zip for zipped DICOM, application/octet-stream for Aperio .svs, and image/tiff), in
+    the InputArtifactCreationRequest documentation table of
+    openapi/aignostics-platform-api-openapi.json. The Python SDK ships a
+    src/aignostics/wsi/_pydicom_handler.py alongside an OpenSlide handler, and the org publishes a
+    fork of dicom-microscopy-viewer.
+  note: >-
+    DICOM is the interoperability standard for this market. A pathology lab whose slide scanner
+    already emits DICOM WSI can submit its native output with no conversion layer; a provider
+    accepting only vendor formats would require a bilateral connector.
+- id: ivdr
+  name: EU In Vitro Diagnostic Medical Devices Regulation (EU) 2017/746
+  conforms: declared-per-application
+  signature: contract-field
+  evidence: >-
+    ApplicationReadResponse.regulatory_classes - "Regulatory classes, to which the applications
+    comply with. Possible values include: RUO, IVDR, FDA." The example value in the spec is ["RUO"].
+  note: >-
+    The regulatory class is a per-application, per-version property returned by the API itself, not a
+    company-wide claim, and the platform is explicit that an application may be Research Use Only.
+    This is recorded as a contract signature - the API models regulatory classification as
+    first-class data - not as an assertion that any particular Aignostics application is IVDR-marked.
+    A caller must read regulatory_classes at runtime before using a result clinically.
+- id: fda
+  name: US FDA device classification
+  conforms: declared-per-application
+  signature: contract-field
+  evidence: same ApplicationReadResponse.regulatory_classes enumeration (RUO, IVDR, FDA).
+- id: ruo
+  name: Research Use Only
+  conforms: declared-per-application
+  signature: contract-field
+  evidence: ApplicationReadResponse.regulatory_classes example value ["RUO"].
+- id: hl7-fhir
+  conforms: false
+  evidence: >-
+    No FHIR resource, profile or media type appears in the contract. The platform's unit of work is a
+    slide image and a result artifact, not a clinical record, so there is no FHIR surface to expect.
+certifications_published:
+  found: false
+  detail: >-
+    No trust center, and no ISO 27001 / ISO 13485 / SOC 2 / HIPAA / CE mark statement was found on
+    aignostics.com or on the documentation site. security.html covers the SDK's software supply chain
+    (Dependabot, Renovate, CodeQL, SonarQube, secret detection, SBOM generation) and names no
+    third-party certification. GDPR posture is implicit in a German GmbH operating an EU Auth0 tenant
+    and an EU-registered privacy policy, but no certification is claimed.
+  probed:
+  - url: https://www.aignostics.com/
+    status: 200
+  - url: https://aignostics.readthedocs.io/en/latest/security.html
+    status: 200

@@ -1,0 +1,129 @@
+generated: '2026-09-14'
+method: searched
+source: >-
+  https://aignostics.readthedocs.io/en/latest/get_started_api.html,
+  https://aignostics-platform.eu.auth0.com/.well-known/openid-configuration,
+  openapi/aignostics-platform-api-openapi.json
+docs: https://aignostics.readthedocs.io/en/latest/get_started_api.html
+api: Aignostics Platform API
+summary:
+  types:
+  - oauth2
+  oauth2_flows:
+  - authorizationCode
+  - deviceCode
+  anonymous_access: false
+  api_keys: false
+  statement: >-
+    "There is no anonymous access and no organization-wide API key." Every call carries a per-user
+    OAuth bearer token; entitlement is evaluated against the user's organization.
+identity_provider:
+  vendor: Auth0
+  tenant: aignostics-platform.eu.auth0.com
+  region: EU
+  issuer: https://aignostics-platform.eu.auth0.com/
+  discovery: https://aignostics-platform.eu.auth0.com/.well-known/openid-configuration
+  jwks_uri: https://aignostics-platform.eu.auth0.com/.well-known/jwks.json
+  enterprise_sso: true
+  mfa: mandatory
+  note: >-
+    The SDK README states enterprise SSO through Auth0 with mandatory two-factor authentication on
+    all user accounts, and SDK v1.3.0 added an organization parameter to the OAuth flow.
+schemes:
+- name: OAuth2AuthorizationCodeBearer
+  type: oauth2
+  in: header
+  header: 'Authorization: Bearer {access_token}'
+  flows:
+  - flow: authorizationCode
+    authorizationUrl: https://aignostics-platform.eu.auth0.com/authorize
+    tokenUrl: https://aignostics-platform.eu.auth0.com/oauth/token
+    scopes: 0
+    note: >-
+      Declared in the OpenAPI with an EMPTY scopes object. See scopes/aignostics-scopes.yml.
+  - flow: deviceCode
+    standard: RFC 8628
+    deviceAuthorizationUrl: https://aignostics-platform.eu.auth0.com/oauth/device/code
+    tokenUrl: https://aignostics-platform.eu.auth0.com/oauth/token
+    grant_type: urn:ietf:params:oauth:grant-type:device_code
+    audience: https://aignostics-platform-samia
+    scope: offline_access
+    note: >-
+      Documented in the getting-started guide and supported by the tenant
+      (grant_types_supported includes the device-code URN) but NOT declared in the OpenAPI
+      securityScheme. A client generated from the spec alone will only know about the
+      authorization-code flow, even though device code is the flow the docs actually teach and the
+      one the SDK uses for headless and CLI callers.
+  sources:
+  - openapi/aignostics-platform-api-openapi.json
+  - https://aignostics.readthedocs.io/en/latest/get_started_api.html
+credentials:
+  issuance: manual
+  detail: >-
+    A user account is created by organization invitation; the client_id is obtained from
+    support@aignostics.com. There is no client secret and no self-serve key generation. An
+    organization must be registered by the business support team before any of this is possible.
+  self_serve: false
+  rotation: not documented
+tokens:
+  access_token:
+    format: JWT
+    audience: https://aignostics-platform-samia
+    lifetime: not published
+    validation: RS256 against the tenant JWKS
+  refresh_token:
+    issued_when: scope includes offline_access
+    use: >-
+      Renew the access token without a browser round trip - grant_type=refresh_token against
+      https://aignostics-platform.eu.auth0.com/oauth/token.
+  expiry_signal:
+    status: 401
+    body_observed: 'Jwt is missing'
+    note: >-
+      Observed live on 2026-09-14 at https://platform.aignostics.com/api/v1/applications - a
+      plain-text body, not JSON. The docs say treat 401 as "renew and replay once".
+delegated_access:
+  mechanisms:
+  - name: grant
+    operation: create_grant_v1_access_grants_post
+    subjects: [user, organization_admin, organization_user, share_token]
+    relations_creatable: [viewer]
+    note: Only viewer grants may be created through the API; anything else returns 422.
+  - name: share token
+    operation: create_share_token_v1_access_share_tokens_post
+    parameter: share_token (query parameter on the run, item and artifact read operations)
+    secret_handling: >-
+      "The returned share_token value is shown only once and is never stored."
+    expiry: caller-set expires_at at creation
+    revocation: >-
+      DELETE /v1/access/share-tokens/{share_token_id} "invalidates the credential regardless of any
+      active grants".
+    note: >-
+      This is the one credential in the system a machine can mint for another machine - and it is
+      well-shaped: single-display secret, caller-set expiry, independent revocation, and a
+      least-privilege default of viewer. It is scoped to sharing results, not to submitting work.
+secondary_credentials:
+  warning: >-
+    GET /v1/me returns the organization's Google Cloud Storage HMAC access key ID AND secret access
+    key, a Logfire ingest token and a Sentry DSN inside the OrganizationReadResponse body. The
+    identity endpoint is therefore also a credential-distribution endpoint: anything that logs,
+    caches or forwards a /v1/me response is handling live storage credentials. See
+    data-model/aignostics-data-model.yml.
+  source: openapi/aignostics-platform-api-openapi.json (OrganizationReadResponse field descriptions)
+gaps:
+- id: device-flow-undeclared-in-spec
+  detail: >-
+    The flow the documentation teaches is absent from the machine-readable contract. Adding a
+    deviceCode entry to the securityScheme flows would close the gap between the spec and the docs.
+- id: empty-scopes
+  detail: >-
+    The oauth2 scheme declares zero scopes, so the contract expresses no authorization granularity at
+    all - every token is, as far as a generated client can tell, all-or-nothing.
+- id: staging-urls-in-the-vendored-spec
+  detail: >-
+    The OpenAPI copy vendored in the SDK repo at docs/source/_static/openapi_v1.json (info.version
+    1.4.0) points its authorizationUrl and tokenUrl at
+    https://aignostics-platform-STAGING.eu.auth0.com. The live document served at
+    https://platform.aignostics.com/api/v1/openapi.json (1.8.0) correctly points at the production
+    tenant. A developer generating a client from the repo copy - which the README links as the
+    OpenAPI specification - gets a client that authenticates against staging.

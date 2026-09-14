@@ -1,0 +1,221 @@
+generated: '2026-09-14'
+method: searched
+source: >-
+  https://aignostics.readthedocs.io/en/latest/get_started_api.html,
+  openapi/aignostics-platform-api-openapi.json
+api: Aignostics Platform API
+base_url: https://platform.aignostics.com/api/v1
+auth:
+  style: oauth2-bearer
+  header: 'Authorization: Bearer {access_token}'
+  flows:
+  - authorization_code
+  - device_code
+  anonymous_access: false
+  api_keys: false
+  note: >-
+    The getting-started guide states plainly "There is no anonymous access and no organization-wide
+    API key." A client_id is issued per user by support@aignostics.com; there is no client secret.
+  see: authentication/aignostics-authentication.yml
+idempotency:
+  supported: false
+  coverage: none
+  mechanism: null
+  header: null
+  documented_at: https://aignostics.readthedocs.io/en/latest/get_started_api.html
+  statement: >-
+    "POST /v1/runs is not idempotent - calling it twice analyzes your slides twice." The docs tell
+    callers to record the run_id before retrying rather than offering a replay-safe key.
+  detail: >-
+    No Idempotency-Key header, no request-id dedupe, and no idempotency extension appears anywhere in
+    the OpenAPI document (searched: "idempoten" has zero occurrences in the 91KB spec). The mutating
+    surface is 8 operations - create run, cancel run, delete run artifacts, two custom-metadata PUTs,
+    create/revoke grant, create/revoke share token - and none of them accepts a client-supplied
+    idempotency key. Two of those writes (the custom-metadata PUTs) do carry an optional checksum
+    precondition, which is optimistic concurrency control (412 on mismatch), not replay protection:
+    it stops a lost update, not a duplicated submission. Given that a duplicated POST /v1/runs bills
+    a second GPU analysis of the same slides, this is the most consequential gap in the contract.
+concurrency_control:
+  mechanism: optional checksum precondition on custom-metadata writes
+  operations:
+  - put_run_custom_metadata_v1_runs__run_id__custom_metadata_put
+  - put_item_custom_metadata_by_run_v1_runs__run_id__items__external_id__custom_metadata_put
+  behaviour: >-
+    If a checksum is supplied it must match the stored custom metadata or the API returns 412
+    Precondition Failed. If omitted, the submitted metadata overwrites the stored value with no
+    check. The current checksum is read back from GET /v1/runs/{run_id} and the item endpoints.
+  standard_headers: false
+  note: carried in the request body, not as an If-Match/ETag header pair
+pagination:
+  style: page-number
+  params:
+  - name: page
+    default: 1
+    minimum: 1
+  - name: page_size
+    default: 50
+    minimum: 5
+    maximum: 100
+  sort:
+    param: sort
+    syntax: '+field for ascending, -field for descending; array of fields'
+  response_fields:
+  - items
+  - page
+  - page_size
+  - total
+  defect:
+    id: page-size-param-name-inconsistent
+    detail: >-
+      GET /v1/applications spells the parameter `page-size` (hyphen); GET /v1/runs,
+      GET /v1/runs/{run_id}/items, GET /v1/access/grants and GET /v1/access/share-tokens all spell it
+      `page_size` (underscore). A generated client will produce two different parameter names for one
+      concept, and hand-written callers will silently fall back to the default 50 on one of them.
+filtering:
+  style: query parameters plus PostgreSQL JSONPath over custom_metadata
+  jsonpath:
+    param: custom_metadata
+    operations:
+    - list_runs_v1_runs_get
+    - list_run_items_v1_runs__run_id__items_get
+    examples:
+    - '$.case_id'
+    - '$.priority ? (@ == "high")'
+    - '$.confidence_score ? (@ > 0.95)'
+    - '$.flags[*] ? (@ == "reviewed")'
+    - '$.metrics ? (@.accuracy > 0.9 && @.recall > 0.8)'
+    note: >-
+      Expressions are evaluated by PostgreSQL, so the filter dialect is the database's, not a
+      neutral API query language - a leaked implementation detail callers must learn.
+  other_filters:
+  - application_id
+  - application_version
+  - external_id
+  - submitted_by
+  - organization_id
+  - for_organization
+  - item_id__in
+  - external_id__in
+  - state
+  - termination_reason
+metadata:
+  user_defined: custom_metadata
+  scopes:
+  - run
+  - item
+  immutable_fields:
+  - name: deadline
+    note: >-
+      "Run deadlines must be set during run creation and cannot be modified afterward. Any deadline
+      changes in custom metadata will be ignored by the system."
+field_expansion:
+  supported: false
+request_id_tracing:
+  supported: false
+  detail: >-
+    No X-Request-Id, traceparent or correlation header is declared on any request or response in the
+    spec, and the docs name none. An agent retrying a failed write has no server-side handle to
+    reconcile against.
+versioning:
+  style: path
+  current: v1
+  spec_version: 1.8.0
+  note: >-
+    The API version is pinned in the path (/api/v1) and the OpenAPI info.version moves independently
+    (1.8.0 observed live on 2026-09-14). Application content is versioned separately - runs may pin a
+    semantic version_number, and omitting it selects the latest version available to the caller,
+    which makes an unpinned POST /v1/runs silently non-reproducible across an application release.
+  see: lifecycle/aignostics-lifecycle.yml
+error_envelope:
+  format: fastapi-detail
+  rfc9457: false
+  shape: '{"detail": [{"loc": [...], "msg": "...", "type": "..."}]}'
+  validation_status: 422
+  note: >-
+    Only 422 carries a typed body (HTTPValidationError). 400, 401, 402, 403, 404, 409, 410 and 412
+    are declared with a human description and no content schema at all, so a client cannot parse them
+    beyond the status code. No application/problem+json anywhere.
+  see: errors/aignostics-problem-types.yml
+rate_limit_signaling:
+  headers: []
+  status_on_exhaustion: 402
+  detail: >-
+    No 429 response, no Retry-After, and no RateLimit-* or X-RateLimit-* header appears in the spec.
+    The only declared throttle is commercial: POST /v1/runs returns 402 Payment Required when a quota
+    limit (slides per run, or monthly slides) would be exceeded. The numeric limits are not published.
+  see: rate-limits/aignostics-rate-limits.yml
+retry_policy:
+  documented: true
+  source: https://aignostics.readthedocs.io/en/latest/get_started_api.html
+  guidance: >-
+    "Retry 5xx, timeouts, and connection errors with exponential backoff and jitter; never 4xx."
+    401 signals an expired token and should trigger a refresh-token renewal rather than a retry.
+dry_run_mode:
+  supported: false
+  note: >-
+    No preview, validate-only or dry-run flag on POST /v1/runs. An agent cannot rehearse a submission;
+    validation failures surface only as a 400 or 422 after the request is made.
+reversibility:
+  grade: verified
+  summary: >-
+    Every destructive or costly write on this API has a named reversal or a stated window, and the
+    documentation states the windows rather than implying them. That is unusual and it is the
+    strongest agent-safety property in the contract - which matters here precisely because
+    idempotency is absent.
+  write_surfaces:
+  - operation: create_run_v1_runs_post
+    action: POST /v1/runs - submits slides for GPU analysis (billable)
+    reversal:
+      operation: cancel_run_v1_runs__run_id__cancel_post
+      path: POST /v1/runs/{run_id}/cancel
+    window: >-
+      "The execution can be canceled any time while the run is not in the terminated state." Pending
+      items of a canceled run are not processed and do not add to the cost; already-completed items
+      remain downloadable. A second cancel returns 409.
+    window_source: openapi/aignostics-platform-api-openapi.json (cancel_run description)
+    grade: verified
+  - operation: delete_run_items_v1_runs__run_id__artifacts_delete
+    action: DELETE /v1/runs/{run_id}/artifacts - permanently deletes run output artifacts
+    reversal: null
+    window: >-
+      Irreversible. Callable only once the run reaches TERMINATED (409 before that); a second call
+      returns 410 Gone. Independently, "all artifacts are automatically deleted 30 days after the run
+      finishes, regardless of whether the caller explicitly requests such deletion" - so the 30-day
+      retention window is the real deadline for retrieving results, whether or not anyone calls DELETE.
+    window_source: openapi/aignostics-platform-api-openapi.json (delete_run_items description)
+    grade: verified
+  - operation: create_grant_v1_access_grants_post
+    action: POST /v1/access/grants - shares a run with a user or organization
+    reversal:
+      operation: revoke_grant_v1_access_grants__grant_id__delete
+      path: DELETE /v1/access/grants/{grant_id}
+    window: >-
+      Revocable at any time; sets revoked_at on the grant. A second revoke returns 409 Conflict.
+      No expiry window is stated, so a grant persists until revoked.
+    window_source: openapi/aignostics-platform-api-openapi.json (revoke_grant description)
+    grade: verified
+  - operation: create_share_token_v1_access_share_tokens_post
+    action: POST /v1/access/share-tokens - mints a bearer credential for a run
+    reversal:
+      operation: revoke_share_token_v1_access_share_tokens__share_token_id__delete
+      path: DELETE /v1/access/share-tokens/{share_token_id}
+    window: >-
+      Revocable at any time, and revocation "invalidates the credential regardless of any active
+      grants". The token value itself "is shown only once and is never stored", so it cannot be
+      recovered - only revoked and reissued.
+    window_source: openapi/aignostics-platform-api-openapi.json (create/revoke share token descriptions)
+    grade: verified
+  - operation: put_run_custom_metadata_v1_runs__run_id__custom_metadata_put
+    action: PUT custom metadata - full overwrite of the stored JSON
+    reversal: null
+    window: >-
+      No undo and no version history. The optional checksum precondition is the only protection: supply
+      it and a concurrent change returns 412; omit it and the write overwrites blindly.
+    grade: documented
+  read_only: false
+cross_links:
+  errors: errors/aignostics-problem-types.yml
+  lifecycle: lifecycle/aignostics-lifecycle.yml
+  authentication: authentication/aignostics-authentication.yml
+  rate_limits: rate-limits/aignostics-rate-limits.yml
+  data_model: data-model/aignostics-data-model.yml
