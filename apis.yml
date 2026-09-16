@@ -48,30 +48,16 @@ tags_raw:
 - Research
 - Germany
 apis:
-- aid: aignostics:aignostics-platform-api
-  name: Aignostics Platform API
-  description: The public REST API of the Aignostics Platform. Lists the computational pathology applications
-    and application versions an organization is entitled to, submits whole slide images as processing
-    runs, tracks run and per-item state, retrieves result artifacts through short-lived presigned storage
-    URLs, manages run and item custom metadata with optional checksum preconditions, and shares runs through
-    access grants and single-use share tokens. OpenAPI 3.1.0, 26 operations, OAuth 2.0 authorization-code
-    and device-code flows against the organization's Auth0 tenant.
-  image: https://cdn.prod.website-files.com/67adb01f31489469b513304a/67eec0230902714317f91424_ag-logo.svg
+- aid: aignostics:aignostics-public-api
+  name: Aignostics Public API
+  description: The Public API from Aignostics — 21 operation(s) for public.
   humanURL: https://aignostics.readthedocs.io/en/latest/get_started_api.html
   baseURL: https://platform.aignostics.com/api/v1
   tags:
-  - Digital Pathology
-  - Whole Slide Imaging
-  - Machine-Learning
-  - Health
-  tags_raw:
-  - Digital Pathology
-  - Whole Slide Imaging
-  - Machine Learning
-  - Health
+  - Public
   properties:
   - type: OpenAPI
-    url: openapi/aignostics-platform-api-openapi.json
+    url: openapi/aignostics-public-api-openapi.yml
   - type: Documentation
     url: https://aignostics.readthedocs.io/en/latest/get_started_api.html
   - type: APIReference
