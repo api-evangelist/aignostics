@@ -19,6 +19,9 @@ x-source: harvest:secondary-market
 specificationVersion: '0.20'
 created: '2026-09-14'
 modified: '2026-09-14'
+x-docs-platform: sphinx
+x-docs-platform-confidence: medium
+x-docs-platform-checked: 2026-09-17
 tags:
 - Company
 - Artificial Intelligence
