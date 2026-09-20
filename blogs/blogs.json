@@ -1,0 +1,14 @@
+{
+  "repo": "aignostics",
+  "feeds": [
+    {
+      "source": "https://www.aignostics.com/contact",
+      "feed_url": "https://www.aignostics.com/contact",
+      "title": "",
+      "saved": 0,
+      "method": "none"
+    }
+  ],
+  "post_count": 0,
+  "fetched": "2026-09-19T20:17:39Z"
+}
