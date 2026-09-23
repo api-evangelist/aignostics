@@ -1,0 +1,23 @@
+{
+  "provider": "aignostics",
+  "sources": [
+    "_original/aignostics-platform-api-openapi.json"
+  ],
+  "outputs": [
+    "aignostics-public-api-openapi.yml"
+  ],
+  "archived": [],
+  "errors": [
+    "aignostics-platform-api-openapi.json: dangling $ref: #/$defs/LungCancerSpecimen"
+  ],
+  "warnings": [],
+  "notes": [
+    "sourced from openapi/_original/ (1 archived document(s)); previously refined output at the top level was skipped rather than re-split",
+    "aignostics-platform-api-openapi.json: upgraded openapi 3.1.0 -> OpenAPI 3.2.0",
+    "aignostics-platform-api-openapi.json: declared missing tag: Public",
+    "apis.yml register: already-registered"
+  ],
+  "skipped": [
+    "aignostics-public-api-openapi.yml: previously refined output, superseded by openapi/_original/"
+  ]
+}
