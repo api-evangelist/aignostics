@@ -13,6 +13,22 @@ description: 'Aignostics GmbH is a Berlin-based computational pathology company,
   sharing model. Access is organization-scoped: there is no anonymous access and no organization-wide
   API key.'
 url: https://raw.githubusercontent.com/api-evangelist/aignostics/refs/heads/main/apis.yml
+deliveryModel:
+  model: saas
+  license_evidence:
+    not_product:
+    - aignostics/python-sdk
+  open_source: unknown
+  commercial: true
+  callable_host: false
+  label: Hosted service · you call their endpoint
+  confidence: low
+  source:
+  - openapi
+  - pricing
+  - repository-not-product
+  generated: '2026-09-25'
+  method: derived
 image: https://cdn.prod.website-files.com/67adb01f31489469b513304a/67eec0230902714317f91424_ag-logo.svg
 x-type: company
 x-source: harvest:secondary-market
@@ -25,7 +41,7 @@ x-docs-platform-checked: 2026-09-17
 tags:
 - Company
 - Artificial Intelligence
-- Machine-Learning
+- Machine Learning
 - Health
 - Healthcare
 - Life Sciences
@@ -50,6 +66,7 @@ tags_raw:
 - Biotechnology
 - Research
 - Germany
+- Machine-Learning
 apis:
 - aid: aignostics:aignostics-public-api
   name: Aignostics Public API
