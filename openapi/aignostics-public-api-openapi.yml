@@ -1,8 +1,27 @@
 openapi: 3.2.0
 info:
+  description: 'The Aignostics Platform is a cloud-based service that enables organizations to access advanced computational pathology applications through a secure API. The platform provides standardized access to Aignostics'' portfolio of computational pathology solutions, with Atlas H&E-TME serving as an example of the available API endpoints.
+
+
+    To begin using the platform, your organization must first be registered by our business support team. If you don''t have an account yet, please contact your account manager or email support@aignostics.com to get started.
+
+
+    More information about our applications can be found on https://platform.aignostics.com.
+
+
+    **How to authorize and test API endpoints:**
+
+
+    1. Click the "Authorize" button in the right corner below
+
+    3. Click "Authorize" button in the dialog to log in with your Aignostics Platform credentials
+
+    4. After successful login, you''ll be redirected back and can use "Try it out" on any endpoint
+
+
+    **Note**: You only need to authorize once per session. The lock icons next to endpoints will show green when authorized.'
   title: Aignostics Platform Public API
-  description: The Aignostics Platform is a cloud-based service that enables organizations to access advanced computational pathology applications through a secure API.
-  version: 1.8.0
+  version: 1.4.0
 servers:
 - url: /api
 tags:
@@ -10,9 +29,6 @@ tags:
 paths:
   /v1/applications:
     get:
-      tags:
-      - Public
-      summary: List available applications
       description: 'Returns the list of the applications, available to the caller.
 
 
@@ -20,34 +36,53 @@ paths:
 
         The response is paginated and sorted according to the provided parameters.'
       operationId: list_applications_v1_applications_get
-      security:
-      - OAuth2AuthorizationCodeBearer: []
       parameters:
-      - name: page
-        in: query
+      - in: query
+        name: page
         required: false
         schema:
-          type: integer
-          minimum: 1
           default: 1
+          minimum: 1
           title: Page
-      - name: page-size
-        in: query
+          type: integer
+      - in: query
+        name: page-size
         required: false
         schema:
-          type: integer
+          default: 50
           maximum: 100
           minimum: 5
-          default: 50
           title: Page-Size
-      - name: sort
+          type: integer
+      - description: 'Sort the results by one or more fields. Use `+` for ascending and `-` for descending order.
+
+
+          **Available fields:**
+
+          - `application_id`
+
+          - `name`
+
+          - `description`
+
+          - `regulatory_classes`
+
+
+          **Examples:**
+
+          - `?sort=application_id` - Sort by application_id ascending
+
+          - `?sort=-name` - Sort by name descending
+
+          - `?sort=+description&sort=name` - Sort by description ascending, then name descending'
         in: query
+        name: sort
         required: false
         schema:
           anyOf:
-          - type: array
-            items:
+          - items:
               type: string
+            type: array
           - type: 'null'
           description: 'Sort the results by one or more fields. Use `+` for ascending and `-` for descending order.
 
@@ -71,286 +106,291 @@ paths:
 
             - `?sort=+description&sort=name` - Sort by description ascending, then name descending'
           title: Sort
-        description: 'Sort the results by one or more fields. Use `+` for ascending and `-` for descending order.
-
-
-          **Available fields:**
-
-          - `application_id`
-
-          - `name`
-
-          - `description`
-
-          - `regulatory_classes`
-
-
-          **Examples:**
-
-          - `?sort=application_id` - Sort by application_id ascending
-
-          - `?sort=-name` - Sort by name descending
-
-          - `?sort=+description&sort=name` - Sort by description ascending, then name descending'
       responses:
         '200':
-          description: A list of applications available to the caller
           content:
             application/json:
-              schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/ApplicationReadShortResponse'
-                title: Response List Applications V1 Applications Get
               example:
               - application_id: he-tme
-                name: Atlas H&E-TME
-                regulatory_classes:
-                - RUO
                 description: The Atlas H&E TME is an AI application designed to examine FFPE (formalin-fixed, paraffin-embedded) tissues stained with H&E (hematoxylin and eosin), delivering comprehensive insights into the tumor microenvironment.
                 latest_version:
                   number: 1.0.0
                   released_at: '2025-09-01T19:01:05.401Z'
-              - application_id: test-app
-                name: Test Application
+                name: Atlas H&E-TME
                 regulatory_classes:
                 - RUO
+              - application_id: test-app
                 description: 'This is the test application with two algorithms: TissueQc and Tissue Segmentation'
                 latest_version:
                   number: 2.0.0
                   released_at: '2025-09-02T19:01:05.401Z'
+                name: Test Application
+                regulatory_classes:
+                - RUO
+              schema:
+                items:
+                  $ref: '#/components/schemas/ApplicationReadShortResponse'
+                title: Response List Applications V1 Applications Get
+                type: array
+          description: A list of applications available to the caller
         '401':
           description: Unauthorized - Invalid or missing authentication
         '422':
-          description: Validation Error
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/HTTPValidationError'
-  /v1/applications/{application_id}:
-    get:
-      tags:
-      - Public
-      summary: Read Application By Id
-      description: Retrieve details of a specific application by its ID.
-      operationId: read_application_by_id_v1_applications__application_id__get
+          description: Validation Error
       security:
       - OAuth2AuthorizationCodeBearer: []
+      summary: List available applications
+      tags:
+      - Public
+  /v1/applications/{application_id}:
+    get:
+      description: Retrieve details of a specific application by its ID.
+      operationId: read_application_by_id_v1_applications__application_id__get
       parameters:
-      - name: application_id
-        in: path
+      - in: path
+        name: application_id
         required: true
         schema:
-          type: string
           title: Application Id
+          type: string
       responses:
         '200':
-          description: Successful Response
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/ApplicationReadResponse'
+          description: Successful Response
         '403':
           description: Forbidden - You don't have permission to see this application
         '404':
           description: Not Found - Application with the given ID does not exist
         '422':
-          description: Validation Error
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/HTTPValidationError'
-  /v1/applications/{application_id}/versions/{version}:
-    get:
+          description: Validation Error
+      security:
+      - OAuth2AuthorizationCodeBearer: []
+      summary: Read Application By Id
       tags:
       - Public
-      summary: Application Version Details
+  /v1/applications/{application_id}/versions/{version}:
+    get:
       description: 'Get the application version details.
 
 
         Allows caller to retrieve information about application version based on provided application version ID.'
       operationId: application_version_details_v1_applications__application_id__versions__version__get
-      security:
-      - OAuth2AuthorizationCodeBearer: []
       parameters:
-      - name: application_id
-        in: path
+      - in: path
+        name: application_id
         required: true
         schema:
-          type: string
           title: Application Id
-      - name: version
-        in: path
+          type: string
+      - in: path
+        name: version
         required: true
         schema:
-          type: string
           pattern: ^(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)(?:-((?:0|[1-9]\d*|\d*[a-zA-Z-][0-9a-zA-Z-]*)(?:\.(?:0|[1-9]\d*|\d*[a-zA-Z-][0-9a-zA-Z-]*))*))?(?:\+([0-9a-zA-Z-]+(?:\.[0-9a-zA-Z-]+)*))?$
           title: Version
+          type: string
       responses:
         '200':
-          description: Successful Response
           content:
             application/json:
-              schema:
-                $ref: '#/components/schemas/VersionReadResponse'
               example:
-                version_number: 1.3.0
                 changelog: New deployment
                 input_artifacts:
-                - name: whole_slide_image
-                  mime_type: image/tiff
-                  metadata_schema:
-                    type: object
-                    title: Slide Schema
-                    description: Schema of a slide.
+                - metadata_schema:
                     $defs:
-                      LungCancerSpecimen:
-                        type: object
-                        title: LungCancerSpecimen
-                        required:
-                        - disease
+                      LungCancerMetadata:
+                        additionalProperties: false
                         properties:
-                          disease:
-                            const: LUNG_CANCER
-                            type: string
-                            title: Disease
                           tissue:
                             enum:
-                            - LUNG
-                            - LYMPH_NODE
-                            - LIVER
-                            - ADRENAL_GLAND
-                            - BONE
-                            - BRAIN
-                            - OTHER
-                            type: string
+                            - lung
+                            - lymph node
+                            - liver
+                            - adrenal gland
+                            - bone
+                            - brain
                             title: Tissue
-                            default: OTHER
-                        additionalProperties: false
-                    required:
-                    - checksum_base64_crc32c
-                    - staining_method
-                    - specimen
-                    properties:
-                      checksum_base64_crc32c:
-                        type: string
-                        title: Base64 encoded big-endian CRC32C checksum
-                      staining_method:
-                        const: H&E
-                        type: string
-                        title: Staining Method
-                      specimen:
-                        anyOf:
-                        - $ref: '#/$defs/LungCancerSpecimen'
-                        title: Specimen
-                      media_type:
-                        anyOf:
-                        - enum:
-                          - application/dicom
-                          - image/tiff
-                          - application/octet-stream
-                          - application/zip
-                          type: string
-                        - type: 'null'
-                        title: Media Type
-                      resolution_mpp:
-                        anyOf:
-                        - type: number
-                          maximum: 0.55
-                          minimum: 0.08
-                        - type: 'null'
-                        title: Resolution (mpp)
-                      width_px:
-                        anyOf:
-                        - type: integer
-                          minimum: 1
-                        - type: 'null'
-                        title: Width (px)
-                      height_px:
-                        anyOf:
-                        - type: integer
-                          minimum: 1
-                        - type: 'null'
-                        title: Height (px)
-                    additionalProperties: false
-                output_artifacts:
-                - name: tissue_qc:segmentation_map_image
-                  mime_type: image/tiff
-                  metadata_schema:
-                    type: object
-                    title: SegmentationMapImageMetadata
-                    description: Metadata corresponding to a segmentation map image.
-                    required:
-                    - checksum_base64_crc32c
-                    - width_px
-                    - height_px
-                    - class_colors
-                    properties:
-                      checksum_base64_crc32c:
-                        type: string
-                        title: Base64 encoded big-endian CRC32C checksum
-                      width_px:
-                        type: integer
-                        title: Width Px
-                      height_px:
-                        type: integer
-                        title: Height Px
-                      media_type:
-                        const: image/tiff
-                        type: string
-                        title: Media Type
-                        default: image/tiff
-                      resolution_mpp:
-                        type: number
-                        title: Resolution Mpp
-                        maximum: 0.55
-                        minimum: 0.08
-                      class_colors:
+                            type: string
+                          type:
+                            const: lung
+                            enum:
+                            - lung
+                            title: Type
+                            type: string
+                        required:
+                        - type
+                        - tissue
+                        title: LungCancerMetadata
                         type: object
-                        title: Class Colors
+                    $schema: http://json-schema.org/draft-07/schema#
+                    additionalProperties: false
+                    description: Metadata corresponding to an external image.
+                    properties:
+                      base_mpp:
+                        maximum: 0.5
+                        minimum: 0.125
+                        title: Base Mpp
+                        type: number
+                      cancer:
+                        anyOf:
+                        - $ref: '#/$defs/LungCancerMetadata'
+                        title: Cancer
+                      checksum_crc32c:
+                        title: Checksum Crc32C
+                        type: string
+                      height:
+                        maximum: 150000
+                        minimum: 1
+                        title: Height
+                        type: integer
+                      mime_type:
+                        default: image/tiff
+                        enum:
+                        - application/dicom
+                        - image/tiff
+                        title: Mime Type
+                        type: string
+                      stain:
+                        const: H&E
+                        default: H&E
+                        enum:
+                        - H&E
+                        title: Stain
+                        type: string
+                      width:
+                        maximum: 150000
+                        minimum: 1
+                        title: Width
+                        type: integer
+                    required:
+                    - checksum_crc32c
+                    - base_mpp
+                    - width
+                    - height
+                    - cancer
+                    title: ExternalImageMetadata
+                    type: object
+                  mime_type: image/tiff
+                  name: whole_slide_image
+                output_artifacts:
+                - metadata_schema:
+                    $schema: http://json-schema.org/draft-07/schema#
+                    additionalProperties: false
+                    description: Metadata corresponding to a segmentation heatmap file.
+                    properties:
+                      base_mpp:
+                        maximum: 0.5
+                        minimum: 0.125
+                        title: Base Mpp
+                        type: number
+                      checksum_crc32c:
+                        title: Checksum Crc32C
+                        type: string
+                      class_colors:
                         additionalProperties:
-                          type: array
                           maxItems: 3
                           minItems: 3
                           prefixItems:
-                          - type: integer
-                            maximum: 255
+                          - maximum: 255
                             minimum: 0
-                          - type: integer
-                            maximum: 255
+                            type: integer
+                          - maximum: 255
                             minimum: 0
-                          - type: integer
-                            maximum: 255
+                            type: integer
+                          - maximum: 255
                             minimum: 0
-                    additionalProperties: false
+                            type: integer
+                          type: array
+                        title: Class Colors
+                        type: object
+                      height:
+                        title: Height
+                        type: integer
+                      mime_type:
+                        const: image/tiff
+                        default: image/tiff
+                        enum:
+                        - image/tiff
+                        title: Mime Type
+                        type: string
+                      width:
+                        title: Width
+                        type: integer
+                    required:
+                    - checksum_crc32c
+                    - width
+                    - height
+                    - class_colors
+                    title: HeatmapMetadata
+                    type: object
+                  mime_type: image/tiff
+                  name: tissue_qc:tiff_heatmap
                   scope: ITEM
                   visibility: EXTERNAL
                 released_at: '2025-04-16T08:45:20.655972Z'
+                version_number: 0.4.4
+              schema:
+                $ref: '#/components/schemas/VersionReadResponse'
+          description: Successful Response
         '403':
           description: Forbidden - You don't have permission to see this version
         '404':
           description: Not Found - Application version with given ID is not available to you or does not exist
         '422':
-          description: Validation Error
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/HTTPValidationError'
-  /v1/runs:
-    get:
+          description: Validation Error
+      security:
+      - OAuth2AuthorizationCodeBearer: []
+      summary: Application Version Details
       tags:
       - Public
-      summary: List Runs
+  /v1/me:
+    get:
+      description: 'Retrieves your identity details, including name, email, and organization.
+
+        This is useful for verifying that the request is being made under the correct user profile
+
+        and organization context, as well as confirming that the expected environment variables are correctly set
+
+        (in case you are using Python SDK)'
+      operationId: get_me_v1_me_get
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MeReadResponse'
+          description: Successful Response
+      security:
+      - OAuth2AuthorizationCodeBearer: []
+      summary: Get current user
+      tags:
+      - Public
+  /v1/runs:
+    get:
       description: 'List runs with filtering, sorting, and pagination capabilities.
 
 
         Returns paginated runs that were submitted by the user.'
       operationId: list_runs_v1_runs_get
-      security:
-      - OAuth2AuthorizationCodeBearer: []
       parameters:
-      - name: application_id
+      - description: Optional application ID filter
         in: query
+        name: application_id
         required: false
         schema:
           anyOf:
@@ -361,9 +401,9 @@ paths:
           - tissue-segmentation
           - heta
           title: Application Id
-        description: Optional application ID filter
-      - name: application_version
+      - description: Optional Version Name
         in: query
+        name: application_version
         required: false
         schema:
           anyOf:
@@ -374,9 +414,9 @@ paths:
           - 1.0.2
           - 1.0.1-beta2
           title: Application Version
-        description: Optional Version Name
-      - name: external_id
+      - description: Optionally filter runs by items with this external ID
         in: query
+        name: external_id
         required: false
         schema:
           anyOf:
@@ -387,88 +427,62 @@ paths:
           - slide_001
           - patient_12345_sample_A
           title: External Id
-        description: Optionally filter runs by items with this external ID
-      - name: custom_metadata
+      - description: "Use PostgreSQL JSONPath expressions to filter runs by their custom_metadata.\n#### URL Encoding Required\n**Important**: JSONPath expressions contain special characters that must be URL-encoded when used in query parameters. Most HTTP clients handle this automatically, but when constructing URLs manually, please ensure proper encoding.\n\n#### Examples (Clear Format):\n- **Field existence**: `$.study` - Runs that have a study field defined\n- **Exact value match**: `$.study ? (@ == \"high\")` - Runs with specific study value\n- **Numeric comparison**: `$.confidence_score ? (@ > 0.75)` - Runs with confidence score greater than 0.75\n- **Array operations**: `$.tags[*] ? (@ == \"draft\")` - Runs with tags array containing \"draft\"\n- **Complex conditions**: `$.resources ? (@.gpu_count > 2 && @.memory_gb >= 16)` - Runs with high resource requirements\n\n#### Examples (URL-Encoded Format):\n- **Field existence**: `%24.study`\n- **Exact value match**: `%24.study%20%3F%20(%40%20%3D%3D%20%22high%22)`\n- **Numeric comparison**: `%24.confidence_score%20%3F%20(%40%20%3E%200.75)`\n- **Array operations**: `%24.tags%5B*%5D%20%3F%20(%40%20%3D%3D%20%22draft%22)`\n- **Complex conditions**: `%24.resources%20%3F%20(%40.gpu_count%20%3E%202%20%26%26%20%40.memory_gb%20%3E%3D%2016)`\n\n#### Notes\n- JSONPath expressions are evaluated using PostgreSQL's `@?` operator\n- The `$.` prefix is automatically added to root-level field references if missing\n- String values in conditions must be enclosed in double quotes\n- Use `&&` for AND operations and `||` for OR operations\n- Regular expressions use `like_regex` with standard regex syntax\n- **Please remember to URL-encode the entire JSONPath expression when making HTTP requests**\n\n            "
+        examples:
+          array_operations:
+            description: Check if an array contains a certain value
+            summary: Check if an array contains a certain value
+            value: $.tags[*] ? (@ == "draft")
+          complex_filters:
+            description: Combine multiple checks
+            summary: Combine multiple checks
+            value: $.resources ? (@.gpu_count > 2 && @.memory_gb >= 16)
+          field_exists:
+            description: Find applications that have a project field defined
+            summary: Check if field exists
+            value: $.study
+          field_has_value:
+            description: Compare a field value against a certain value
+            summary: Check if field has a certain value
+            value: $.study ? (@ == "abc-1")
+          no_filter:
+            description: Returns all items without filtering by custom metadata
+            summary: No filter (returns all)
+            value: $
+          numeric_comparisons:
+            description: Compare a field value against a numeric value of a field
+            summary: Compare to a numeric value of a field
+            value: $.confidence_score ? (@ > 0.75)
         in: query
+        name: custom_metadata
         required: false
         schema:
           anyOf:
-          - type: string
-            maxLength: 1000
+          - maxLength: 1000
+            type: string
           - type: 'null'
           description: "Use PostgreSQL JSONPath expressions to filter runs by their custom_metadata.\n#### URL Encoding Required\n**Important**: JSONPath expressions contain special characters that must be URL-encoded when used in query parameters. Most HTTP clients handle this automatically, but when constructing URLs manually, please ensure proper encoding.\n\n#### Examples (Clear Format):\n- **Field existence**: `$.study` - Runs that have a study field defined\n- **Exact value match**: `$.study ? (@ == \"high\")` - Runs with specific study value\n- **Numeric comparison**: `$.confidence_score ? (@ > 0.75)` - Runs with confidence score greater than 0.75\n- **Array operations**: `$.tags[*] ? (@ == \"draft\")` - Runs with tags array containing \"draft\"\n- **Complex conditions**: `$.resources ? (@.gpu_count > 2 && @.memory_gb >= 16)` - Runs with high resource requirements\n\n#### Examples (URL-Encoded Format):\n- **Field existence**: `%24.study`\n- **Exact value match**: `%24.study%20%3F%20(%40%20%3D%3D%20%22high%22)`\n- **Numeric comparison**: `%24.confidence_score%20%3F%20(%40%20%3E%200.75)`\n- **Array operations**: `%24.tags%5B*%5D%20%3F%20(%40%20%3D%3D%20%22draft%22)`\n- **Complex conditions**: `%24.resources%20%3F%20(%40.gpu_count%20%3E%202%20%26%26%20%40.memory_gb%20%3E%3D%2016)`\n\n#### Notes\n- JSONPath expressions are evaluated using PostgreSQL's `@?` operator\n- The `$.` prefix is automatically added to root-level field references if missing\n- String values in conditions must be enclosed in double quotes\n- Use `&&` for AND operations and `||` for OR operations\n- Regular expressions use `like_regex` with standard regex syntax\n- **Please remember to URL-encode the entire JSONPath expression when making HTTP requests**\n\n            "
           title: Custom Metadata
-        description: "Use PostgreSQL JSONPath expressions to filter runs by their custom_metadata.\n#### URL Encoding Required\n**Important**: JSONPath expressions contain special characters that must be URL-encoded when used in query parameters. Most HTTP clients handle this automatically, but when constructing URLs manually, please ensure proper encoding.\n\n#### Examples (Clear Format):\n- **Field existence**: `$.study` - Runs that have a study field defined\n- **Exact value match**: `$.study ? (@ == \"high\")` - Runs with specific study value\n- **Numeric comparison**: `$.confidence_score ? (@ > 0.75)` - Runs with confidence score greater than 0.75\n- **Array operations**: `$.tags[*] ? (@ == \"draft\")` - Runs with tags array containing \"draft\"\n- **Complex conditions**: `$.resources ? (@.gpu_count > 2 && @.memory_gb >= 16)` - Runs with high resource requirements\n\n#### Examples (URL-Encoded Format):\n- **Field existence**: `%24.study`\n- **Exact value match**: `%24.study%20%3F%20(%40%20%3D%3D%20%22high%22)`\n- **Numeric comparison**: `%24.confidence_score%20%3F%20(%40%20%3E%200.75)`\n- **Array operations**: `%24.tags%5B*%5D%20%3F%20(%40%20%3D%3D%20%22draft%22)`\n- **Complex conditions**: `%24.resources%20%3F%20(%40.gpu_count%20%3E%202%20%26%26%20%40.memory_gb%20%3E%3D%2016)`\n\n#### Notes\n- JSONPath expressions are evaluated using PostgreSQL's `@?` operator\n- The `$.` prefix is automatically added to root-level field references if missing\n- String values in conditions must be enclosed in double quotes\n- Use `&&` for AND operations and `||` for OR operations\n- Regular expressions use `like_regex` with standard regex syntax\n- **Please remember to URL-encode the entire JSONPath expression when making HTTP requests**\n\n            "
-        examples:
-          no_filter:
-            summary: No filter (returns all)
-            description: Returns all items without filtering by custom metadata
-            value: $
-          field_exists:
-            summary: Check if field exists
-            description: Find applications that have a project field defined
-            value: $.study
-          field_has_value:
-            summary: Check if field has a certain value
-            description: Compare a field value against a certain value
-            value: $.study ? (@ == "abc-1")
-          numeric_comparisons:
-            summary: Compare to a numeric value of a field
-            description: Compare a field value against a numeric value of a field
-            value: $.confidence_score ? (@ > 0.75)
-          array_operations:
-            summary: Check if an array contains a certain value
-            description: Check if an array contains a certain value
-            value: $.tags[*] ? (@ == "draft")
-          complex_filters:
-            summary: Combine multiple checks
-            description: Combine multiple checks
-            value: $.resources ? (@.gpu_count > 2 && @.memory_gb >= 16)
-      - name: page
-        in: query
+      - in: query
+        name: page
         required: false
         schema:
-          type: integer
-          minimum: 1
           default: 1
+          minimum: 1
           title: Page
-      - name: page_size
-        in: query
+          type: integer
+      - in: query
+        name: page_size
         required: false
         schema:
-          type: integer
+          default: 50
           maximum: 100
           minimum: 5
-          default: 50
           title: Page Size
-      - name: submitted_by
+          type: integer
+      - description: Filter runs by organization ID. Available for superadmins (any org) and admins (own org only). When provided, returns all runs for the specified organization instead of only the caller's own runs.
         in: query
-        required: false
-        schema:
-          anyOf:
-          - type: string
-          - type: 'null'
-          description: Filter runs by the user who submitted them. Use the special value `me` to return only runs submitted by the current user.
-          examples:
-          - me
-          - auth0|123456789
-          title: Submitted By
-        description: Filter runs by the user who submitted them. Use the special value `me` to return only runs submitted by the current user.
-      - name: organization_id
-        in: query
-        required: false
-        schema:
-          anyOf:
-          - type: string
-          - type: 'null'
-          description: Filter runs by the organization of the submitter. Use the special value `my_org` to filter by the current user's organization.
-          examples:
-          - my_org
-          - org_acme
-          title: Organization Id
-        description: Filter runs by the organization of the submitter. Use the special value `my_org` to filter by the current user's organization.
-      - name: for_organization
-        in: query
+        name: for_organization
         required: false
         schema:
           anyOf:
@@ -476,15 +490,45 @@ paths:
           - type: 'null'
           description: Filter runs by organization ID. Available for superadmins (any org) and admins (own org only). When provided, returns all runs for the specified organization instead of only the caller's own runs.
           title: For Organization
-        description: Filter runs by organization ID. Available for superadmins (any org) and admins (own org only). When provided, returns all runs for the specified organization instead of only the caller's own runs.
-      - name: sort
+      - description: 'Sort the results by one or more fields. Use `+` for ascending and `-` for descending order.
+
+
+          **Available fields:**
+
+          - `run_id`
+
+          - `application_id`
+
+          - `version_number`
+
+          - `custom_metadata`
+
+          - `submitted_at`
+
+          - `submitted_by`
+
+          - `terminated_at`
+
+          - `termination_reason`
+
+
+          **Examples:**
+
+          - `?sort=submitted_at` - Sort by creation time (ascending)
+
+          - `?sort=-submitted_at` - Sort by creation time (descending)
+
+          - `?sort=state&sort=-submitted_at` - Sort by state, then by time (descending)
+
+          '
         in: query
+        name: sort
         required: false
         schema:
           anyOf:
-          - type: array
-            items:
+          - items:
               type: string
+            type: array
           - type: 'null'
           description: 'Sort the results by one or more fields. Use `+` for ascending and `-` for descending order.
 
@@ -518,97 +562,198 @@ paths:
 
             '
           title: Sort
-        description: 'Sort the results by one or more fields. Use `+` for ascending and `-` for descending order.
-
-
-          **Available fields:**
-
-          - `run_id`
-
-          - `application_id`
-
-          - `version_number`
-
-          - `custom_metadata`
-
-          - `submitted_at`
-
-          - `submitted_by`
-
-          - `terminated_at`
-
-          - `termination_reason`
-
-
-          **Examples:**
-
-          - `?sort=submitted_at` - Sort by creation time (ascending)
-
-          - `?sort=-submitted_at` - Sort by creation time (descending)
-
-          - `?sort=state&sort=-submitted_at` - Sort by state, then by time (descending)
-
-          '
       responses:
         '200':
-          description: Successful Response
           content:
             application/json:
               schema:
-                type: array
                 items:
                   $ref: '#/components/schemas/RunReadResponse'
                 title: Response List Runs V1 Runs Get
+                type: array
+          description: Successful Response
         '404':
           description: Run not found
         '422':
-          description: Validation Error
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/HTTPValidationError'
-    post:
-      tags:
-      - Public
-      summary: Initiate Run
-      description: 'This endpoint initiates a processing run for a selected application and version, and returns a
-
-        `run_id` for tracking purposes.'
-      operationId: create_run_v1_runs_post
+          description: Validation Error
       security:
       - OAuth2AuthorizationCodeBearer: []
+      summary: List Runs
+      tags:
+      - Public
+    post:
+      description: 'This endpoint initiates a processing run for a selected application and version, and returns a `run_id` for tracking purposes.
+
+
+        Slide processing occurs asynchronously, allowing you to retrieve results for individual slides as soon as they
+
+        complete processing. The system typically processes slides in batches.
+
+        Below is an example of the required payload for initiating an Atlas H&E TME processing run.
+
+
+        ### Payload
+
+
+        The payload includes `application_id`, optional `version_number`, and `items` base fields.
+
+
+        `application_id` is the unique identifier for the application.
+
+        `version_number` is the semantic version to use. If not provided, the latest available version will be used.
+
+
+        `items` includes the list of the items to process (slides, in case of HETA application).
+
+        Every item has a set of standard fields defined by the API, plus the custom_metadata, specific to the
+
+        chosen application.
+
+
+        Example payload structure with the comments:
+
+        ```
+
+        {
+
+        application_id: "he-tme",
+
+        version_number: "1.0.0-beta",
+
+        items: [{
+
+        "external_id": "slide_1",
+
+        "custom_metadata": {"project": "sample-study"},
+
+        "input_artifacts": [{
+
+        "name": "user_slide",
+
+        "download_url": "https://...",
+
+        "metadata": {
+
+        "specimen": {
+
+        "disease": "LUNG_CANCER",
+
+        "tissue": "LUNG"
+
+        },
+
+        "staining_method": "H&E",
+
+        "width_px": 136223,
+
+        "height_px": 87761,
+
+        "resolution_mpp": 0.2628238,
+
+        "media-type":"image/tiff",
+
+        "checksum_base64_crc32c": "64RKKA=="
+
+        }
+
+        }]
+
+        }]
+
+        }
+
+        ```
+
+
+        | Parameter | Description |
+
+        | :---- | :---- |
+
+        | `application_id` required | Unique ID for the application |
+
+        | `version_number` optional | Semantic version of the application. If not provided, the latest available version will be used |
+
+        | `items` required | List of submitted items i.e. whole slide images (WSIs) with parameters described below. |
+
+        | `external_id` required | Unique WSI name or ID for easy reference to items, provided by the caller. The `external_id` should be unique across all items of the run. |
+
+        | `input_artifacts` required | List of provided artifacts for a WSI; at the moment Atlas H&E-TME receives only 1 artifact per slide (the slide itself), but for some other applications this can be a slide and a segmentation map |
+
+        | `name` required | Type of artifact; Atlas H&E-TME supports only `"input_slide"` |
+
+        | `download_url` required | Signed URL to the input file in the S3 or GCS; Should be valid for at least 6 days |
+
+        | `specimen: disease` required | Supported cancer types for Atlas H&E-TME (see full list in Atlas H&E-TME manual) |
+
+        | `specimen: tissue` required | Supported tissue types for Atlas H&E-TME (see full list in Atlas H&E-TME manual) |
+
+        | `staining_method` required | WSI stain bio-marker; Atlas H&E-TME supports only `"H&E"` |
+
+        | `width_px` required | Integer value. Number of pixels of the WSI in the X dimension. |
+
+        | `height_px` required | Integer value. Number of pixels of the WSI in the Y dimension. |
+
+        | `resolution_mpp` required | Resolution of WSI in micrometers per pixel; check allowed range in Atlas H&E-TME manual |
+
+        | `media-type` required | Supported media formats; available values are: image/tiff (for .tiff or .tif WSI), application/dicom (for DICOM ), application/zip (for zipped DICOM), and application/octet-stream (for .svs WSI) |
+
+        | `checksum_base64_crc32c` required | Base64-encoded big-endian CRC32C checksum of the WSI image |
+
+
+        ### Response
+
+
+        The endpoint returns the run UUID. After that, the job is scheduled for the execution in the background.
+
+
+        To check the status of the run, call `GET v1/runs/{run_id}` endpoint with the returned run UUID.
+
+
+        ### Rejection
+
+
+        Apart from the authentication, authorization, and malformed input error, the request can be
+
+        rejected when specific quota limit is exceeded. More details on quotas is described in the
+
+        documentation'
+      operationId: create_run_v1_runs_post
       requestBody:
-        required: true
         content:
           application/json:
             schema:
               $ref: '#/components/schemas/RunCreationRequest'
+        required: true
       responses:
         '201':
-          description: Successful Response
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/RunCreationResponse'
-        '404':
-          description: Application or application version not found
+          description: Successful Response
         '400':
           description: Bad Request - Input validation failed
-        '402':
-          description: Payment Required - A quota limit (slides per run, or monthly slides) would be exceeded by this run
         '403':
           description: Forbidden - You don't have permission to create this run
+        '404':
+          description: Application version not found
         '422':
-          description: Validation Error
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/HTTPValidationError'
-  /v1/runs/{run_id}:
-    get:
+          description: Validation Error
+      security:
+      - OAuth2AuthorizationCodeBearer: []
+      summary: Initiate Run
       tags:
       - Public
-      summary: Get run details
+  /v1/runs/{run_id}:
+    get:
       description: 'This endpoint allows the caller to retrieve the current status of a run along with other relevant run details.
 
         A run becomes available immediately after it is created through the `POST /v1/runs/` endpoint.
@@ -616,52 +761,140 @@ paths:
 
         To download the output results, use `GET /v1/runs/{run_id}/` items to get outputs for all slides.
 
-        Access to a run is restricted to the user who created it, or users with an active grant or valid share token.'
+        Access to a run is restricted to the user who created it.'
       operationId: get_run_v1_runs__run_id__get
-      security:
-      - OAuth2AuthorizationCodeBearer: []
       parameters:
-      - name: run_id
+      - description: Run id, returned by `POST /v1/runs/` endpoint
         in: path
+        name: run_id
         required: true
         schema:
-          type: string
-          format: uuid
           description: Run id, returned by `POST /v1/runs/` endpoint
+          format: uuid
           title: Run Id
-        description: Run id, returned by `POST /v1/runs/` endpoint
-      - name: share_token
-        in: query
-        required: false
-        schema:
-          anyOf:
-          - type: string
-          - type: 'null'
-          description: Share token for accessing shared runs
-          title: Share Token
-        description: Share token for accessing shared runs
+          type: string
       responses:
         '200':
-          description: Successful Response
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/RunReadResponse'
-        '404':
-          description: Run not found because it was deleted.
+          description: Successful Response
         '403':
           description: Forbidden - You don't have permission to see this run
+        '404':
+          description: Run not found because it was deleted.
         '422':
-          description: Validation Error
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/HTTPValidationError'
-  /v1/runs/{run_id}/cancel:
-    post:
+          description: Validation Error
+      security:
+      - OAuth2AuthorizationCodeBearer: []
+      summary: Get run details
       tags:
       - Public
-      summary: Cancel Run
+  /v1/runs/{run_id}/artifacts:
+    delete:
+      description: 'This endpoint allows the caller to explicitly delete artifacts generated by a run.
+
+        It can only be invoked when the run has reached a final state, i.e.
+
+        `PROCESSED`, `CANCELED_SYSTEM`, or `CANCELED_USER`.
+
+        Note that by default, all artifacts are automatically deleted 30 days after the run finishes,
+
+        regardless of whether the caller explicitly requests such deletion.'
+      operationId: delete_run_items_v1_runs__run_id__artifacts_delete
+      parameters:
+      - description: Run id, returned by `POST /runs/` endpoint
+        in: path
+        name: run_id
+        required: true
+        schema:
+          description: Run id, returned by `POST /runs/` endpoint
+          format: uuid
+          title: Run Id
+          type: string
+      responses:
+        '200':
+          content:
+            application/json:
+              schema: {}
+          description: Run artifacts deleted
+        '404':
+          description: Run not found
+        '422':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+          description: Validation Error
+      security:
+      - OAuth2AuthorizationCodeBearer: []
+      summary: Delete Run Items
+      tags:
+      - Public
+  /v1/runs/{run_id}/artifacts/{artifact_id}/file:
+    get:
+      description: 'Download the artifact file with the specified artifact_id, belonging to the specified run.
+
+        The artifact_is is returned by the `GET /v1/runs/{run_id}/items` endpoint as part of the item results, and can also
+
+        be retrieved via `GET /v1/runs/{run_id}/items/{external_id}`.
+
+
+        The endpoint may return a redirect response with a presigned URL to download the artifact file from the storage
+
+        bucket. The presigned URL is valid for a limited time, so it should be used immediately after receiving the response.'
+      operationId: get_artifact_url_v1_runs__run_id__artifacts__artifact_id__file_get
+      parameters:
+      - description: Run id, returned by `POST /runs/` endpoint
+        in: path
+        name: run_id
+        required: true
+        schema:
+          description: Run id, returned by `POST /runs/` endpoint
+          format: uuid
+          title: Run Id
+          type: string
+      - description: The artifact id to download
+        in: path
+        name: artifact_id
+        required: true
+        schema:
+          description: The artifact id to download
+          format: uuid
+          title: Artifact Id
+          type: string
+      responses:
+        '200':
+          content:
+            application/json:
+              schema: {}
+          description: Successful Response
+        '307':
+          description: Temporary Redirect - Redirect to the artifact file URL
+        '403':
+          description: Forbidden - You don't have permission to download this artifact
+        '404':
+          description: Not Found - Artifact not found for the specified run
+        '410':
+          description: Gone - Artifact has been deleted
+        '422':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+          description: Validation Error
+      security:
+      - OAuth2AuthorizationCodeBearer: []
+      summary: Get Artifact Url
+      tags:
+      - Public
+  /v1/runs/{run_id}/cancel:
+    post:
       description: 'The run can be canceled by the user who created the run.
 
 
@@ -672,41 +905,104 @@ paths:
 
         When the run is canceled, the already completed items remain available for download.'
       operationId: cancel_run_v1_runs__run_id__cancel_post
-      security:
-      - OAuth2AuthorizationCodeBearer: []
       parameters:
-      - name: run_id
+      - description: Run id, returned by `POST /runs/` endpoint
         in: path
+        name: run_id
         required: true
         schema:
-          type: string
-          format: uuid
           description: Run id, returned by `POST /runs/` endpoint
+          format: uuid
           title: Run Id
-        description: Run id, returned by `POST /runs/` endpoint
+          type: string
       responses:
         '202':
-          description: Successful Response
           content:
             application/json:
               schema: {}
-        '404':
-          description: Run not found
+          description: Successful Response
         '403':
           description: Forbidden - You don't have permission to cancel this run
+        '404':
+          description: Run not found
         '409':
           description: Conflict - The Run is already cancelled
         '422':
-          description: Validation Error
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/HTTPValidationError'
-  /v1/runs/{run_id}/items:
-    get:
+          description: Validation Error
+      security:
+      - OAuth2AuthorizationCodeBearer: []
+      summary: Cancel Run
       tags:
       - Public
-      summary: List Run Items
+  /v1/runs/{run_id}/custom-metadata:
+    put:
+      description: 'Update the custom metadata of a run with the specified `run_id`.
+
+
+        Optionally, a checksum may be provided along the custom metadata JSON.
+
+        It can be used to verify if the custom metadata was updated since the last time it was accessed.
+
+        If the checksum is provided, it must match the existing custom metadata in the system, ensuring that the current
+
+        custom metadata value to be overwritten is acknowledged by the user.
+
+        If no checksum is provided, submitted metadata directly overwrites the existing metadata, without any checks.
+
+
+        The latest custom metadata and checksum can be retrieved for the run via the `GET /v1/runs/{run_id}` endpoint.
+
+
+        **Note on deadlines:** Run deadlines must be set during run creation and cannot be modified afterward.
+
+        Any deadline changes in custom metadata will be ignored by the system.'
+      operationId: put_run_custom_metadata_v1_runs__run_id__custom_metadata_put
+      parameters:
+      - description: Run id, returned by `POST /runs/` endpoint
+        in: path
+        name: run_id
+        required: true
+        schema:
+          description: Run id, returned by `POST /runs/` endpoint
+          format: uuid
+          title: Run Id
+          type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CustomMetadataUpdateRequest'
+        required: true
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CustomMetadataUpdateResponse'
+          description: Custom metadata successfully updated
+        '403':
+          description: Forbidden - You don't have permission to update this run
+        '404':
+          description: Run not found
+        '412':
+          description: Precondition Failed - Checksum mismatch, resource has been modified
+        '422':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+          description: Validation Error
+      security:
+      - OAuth2AuthorizationCodeBearer: []
+      summary: Put Run Custom Metadata
+      tags:
+      - Public
+  /v1/runs/{run_id}/items:
+    get:
       description: 'List items in a run with filtering, sorting, and pagination capabilities.
 
 
@@ -743,55 +1039,44 @@ paths:
 
         - Use `&&` for AND operations and `||` for OR operations'
       operationId: list_run_items_v1_runs__run_id__items_get
-      security:
-      - OAuth2AuthorizationCodeBearer: []
       parameters:
-      - name: run_id
+      - description: Run id, returned by `POST /v1/runs/` endpoint
         in: path
+        name: run_id
         required: true
         schema:
-          type: string
-          format: uuid
           description: Run id, returned by `POST /v1/runs/` endpoint
+          format: uuid
           title: Run Id
-        description: Run id, returned by `POST /v1/runs/` endpoint
-      - name: share_token
+          type: string
+      - description: Filter for item ids
         in: query
+        name: item_id__in
         required: false
         schema:
           anyOf:
-          - type: string
-          - type: 'null'
-          description: Share token for accessing shared runs
-          title: Share Token
-        description: Share token for accessing shared runs
-      - name: item_id__in
-        in: query
-        required: false
-        schema:
-          anyOf:
-          - type: array
-            items:
-              type: string
+          - items:
               format: uuid
+              type: string
+            type: array
           - type: 'null'
           description: Filter for item ids
           title: Item Id  In
-        description: Filter for item ids
-      - name: external_id__in
+      - description: Filter for items by their external_id from the input payload
         in: query
+        name: external_id__in
         required: false
         schema:
           anyOf:
-          - type: array
-            items:
+          - items:
               type: string
+            type: array
           - type: 'null'
           description: Filter for items by their external_id from the input payload
           title: External Id  In
-        description: Filter for items by their external_id from the input payload
-      - name: state
+      - description: Filter items by their state
         in: query
+        name: state
         required: false
         schema:
           anyOf:
@@ -799,9 +1084,9 @@ paths:
           - type: 'null'
           description: Filter items by their state
           title: State
-        description: Filter items by their state
-      - name: termination_reason
+      - description: Filter items by their termination reason. Only applies to TERMINATED items.
         in: query
+        name: termination_reason
         required: false
         schema:
           anyOf:
@@ -809,330 +1094,140 @@ paths:
           - type: 'null'
           description: Filter items by their termination reason. Only applies to TERMINATED items.
           title: Termination Reason
-        description: Filter items by their termination reason. Only applies to TERMINATED items.
-      - name: custom_metadata
+      - description: JSONPath expression to filter items by their custom_metadata
+        examples:
+          array_operations:
+            description: Check if an array contains a certain value
+            summary: Check if an array contains a certain value
+            value: $.tags[*] ? (@ == "production")
+          complex_filters:
+            description: Combine multiple checks
+            summary: Combine multiple checks
+            value: $.resources ? (@.gpu_count > 2 && @.memory_gb >= 16)
+          field_exists:
+            description: Find items that have a project field defined
+            summary: Check if field exists
+            value: $.project
+          field_has_value:
+            description: Compare a field value against a certain value
+            summary: Check if field has a certain value
+            value: $.project ? (@ == "cancer-research")
+          no_filter:
+            description: Returns all items without filtering by custom metadata
+            summary: No filter (returns all)
+            value: $
+          numeric_comparisons:
+            description: Compare a field value against a numeric value of a field
+            summary: Compare to a numeric value of a field
+            value: $.duration_hours ? (@ < 2)
         in: query
+        name: custom_metadata
         required: false
         schema:
           anyOf:
-          - type: string
-            maxLength: 1000
+          - maxLength: 1000
+            type: string
           - type: 'null'
           description: JSONPath expression to filter items by their custom_metadata
           title: Custom Metadata
-        description: JSONPath expression to filter items by their custom_metadata
-        examples:
-          no_filter:
-            summary: No filter (returns all)
-            description: Returns all items without filtering by custom metadata
-            value: $
-          field_exists:
-            summary: Check if field exists
-            description: Find items that have a project field defined
-            value: $.project
-          field_has_value:
-            summary: Check if field has a certain value
-            description: Compare a field value against a certain value
-            value: $.project ? (@ == "cancer-research")
-          numeric_comparisons:
-            summary: Compare to a numeric value of a field
-            description: Compare a field value against a numeric value of a field
-            value: $.duration_hours ? (@ < 2)
-          array_operations:
-            summary: Check if an array contains a certain value
-            description: Check if an array contains a certain value
-            value: $.tags[*] ? (@ == "production")
-          complex_filters:
-            summary: Combine multiple checks
-            description: Combine multiple checks
-            value: $.resources ? (@.gpu_count > 2 && @.memory_gb >= 16)
-      - name: page
-        in: query
+      - in: query
+        name: page
         required: false
         schema:
-          type: integer
-          minimum: 1
           default: 1
+          minimum: 1
           title: Page
-      - name: page_size
-        in: query
+          type: integer
+      - in: query
+        name: page_size
         required: false
         schema:
-          type: integer
+          default: 50
           maximum: 100
           minimum: 5
-          default: 50
           title: Page Size
-      - name: sort
+          type: integer
+      - description: "Sort the items by one or more fields. Use `+` for ascending and `-` for descending order.\n                **Available fields:**\n- `item_id`\n- `external_id`\n- `custom_metadata`\n- `terminated_at`\n- `termination_reason`\n\n**Examples:**\n- `?sort=item_id` - Sort by id of the item (ascending)\n- `?sort=-external_id` - Sort by external ID (descending)\n- `?sort=custom_metadata&sort=-external_id` - Sort by metadata, then by external ID (descending)"
         in: query
+        name: sort
         required: false
         schema:
           anyOf:
-          - type: array
-            items:
+          - items:
               type: string
+            type: array
           - type: 'null'
           description: "Sort the items by one or more fields. Use `+` for ascending and `-` for descending order.\n                **Available fields:**\n- `item_id`\n- `external_id`\n- `custom_metadata`\n- `terminated_at`\n- `termination_reason`\n\n**Examples:**\n- `?sort=item_id` - Sort by id of the item (ascending)\n- `?sort=-external_id` - Sort by external ID (descending)\n- `?sort=custom_metadata&sort=-external_id` - Sort by metadata, then by external ID (descending)"
           title: Sort
-        description: "Sort the items by one or more fields. Use `+` for ascending and `-` for descending order.\n                **Available fields:**\n- `item_id`\n- `external_id`\n- `custom_metadata`\n- `terminated_at`\n- `termination_reason`\n\n**Examples:**\n- `?sort=item_id` - Sort by id of the item (ascending)\n- `?sort=-external_id` - Sort by external ID (descending)\n- `?sort=custom_metadata&sort=-external_id` - Sort by metadata, then by external ID (descending)"
       responses:
         '200':
-          description: Successful Response
           content:
             application/json:
               schema:
-                type: array
                 items:
                   $ref: '#/components/schemas/ItemResultReadResponse'
                 title: Response List Run Items V1 Runs  Run Id  Items Get
+                type: array
+          description: Successful Response
         '404':
           description: Run not found
         '422':
-          description: Validation Error
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/HTTPValidationError'
-  /v1/runs/{run_id}/items/{external_id}:
-    get:
-      tags:
-      - Public
-      summary: Get Item By Run
-      description: Retrieve details of a specific item (slide) by its external ID and the run ID.
-      operationId: get_item_by_run_v1_runs__run_id__items__external_id__get
+          description: Validation Error
       security:
       - OAuth2AuthorizationCodeBearer: []
+      summary: List Run Items
+      tags:
+      - Public
+  /v1/runs/{run_id}/items/{external_id}:
+    get:
+      description: Retrieve details of a specific item (slide) by its external ID and the run ID.
+      operationId: get_item_by_run_v1_runs__run_id__items__external_id__get
       parameters:
-      - name: run_id
+      - description: The run id, returned by `POST /runs/` endpoint
         in: path
+        name: run_id
         required: true
         schema:
-          type: string
-          format: uuid
           description: The run id, returned by `POST /runs/` endpoint
+          format: uuid
           title: Run Id
-        description: The run id, returned by `POST /runs/` endpoint
-      - name: external_id
+          type: string
+      - description: The `external_id` that was defined for the item by the customer that triggered the run.
         in: path
+        name: external_id
         required: true
         schema:
-          type: string
           description: The `external_id` that was defined for the item by the customer that triggered the run.
           title: External Id
-        description: The `external_id` that was defined for the item by the customer that triggered the run.
-      - name: share_token
-        in: query
-        required: false
-        schema:
-          anyOf:
-          - type: string
-          - type: 'null'
-          description: Share token for accessing shared runs
-          title: Share Token
-        description: Share token for accessing shared runs
+          type: string
       responses:
         '200':
-          description: Successful Response
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/ItemResultReadResponse'
-        '404':
-          description: Not Found - Item with given ID does not exist
+          description: Successful Response
         '403':
           description: Forbidden - You don't have permission to see this item
+        '404':
+          description: Not Found - Item with given ID does not exist
         '422':
-          description: Validation Error
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/HTTPValidationError'
-  /v1/runs/{run_id}/artifacts/{artifact_id}/file:
-    get:
-      tags:
-      - Public
-      summary: Get Artifact Url
-      description: 'Download the artifact file with the specified artifact_id, belonging to the specified run.
-
-        The artifact_is is returned by the `GET /v1/runs/{run_id}/items` endpoint as part of the item results, and can also
-
-        be retrieved via `GET /v1/runs/{run_id}/items/{external_id}`.
-
-
-        The endpoint may return a redirect response with a presigned URL to download the artifact file from the storage
-
-        bucket. The presigned URL is valid for a limited time, so it should be used immediately after receiving the response.'
-      operationId: get_artifact_url_v1_runs__run_id__artifacts__artifact_id__file_get
+          description: Validation Error
       security:
       - OAuth2AuthorizationCodeBearer: []
-      parameters:
-      - name: run_id
-        in: path
-        required: true
-        schema:
-          type: string
-          format: uuid
-          description: Run id, returned by `POST /runs/` endpoint
-          title: Run Id
-        description: Run id, returned by `POST /runs/` endpoint
-      - name: artifact_id
-        in: path
-        required: true
-        schema:
-          type: string
-          format: uuid
-          description: The artifact id to download
-          title: Artifact Id
-        description: The artifact id to download
-      - name: share_token
-        in: query
-        required: false
-        schema:
-          anyOf:
-          - type: string
-          - type: 'null'
-          description: Share token for accessing shared runs
-          title: Share Token
-        description: Share token for accessing shared runs
-      responses:
-        '200':
-          description: Successful Response
-          content:
-            application/json:
-              schema: {}
-        '404':
-          description: Not Found - Artifact not found for the specified run
-        '307':
-          description: Temporary Redirect - Redirect to the artifact file URL
-        '403':
-          description: Forbidden - You don't have permission to download this artifact
-        '410':
-          description: Gone - Artifact has been deleted
-        '422':
-          description: Validation Error
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/HTTPValidationError'
-  /v1/runs/{run_id}/artifacts:
-    delete:
+      summary: Get Item By Run
       tags:
       - Public
-      summary: Delete Run Items
-      description: 'This endpoint allows the caller to explicitly delete artifacts generated by a run.
-
-
-        It can only be invoked once the run has reached state `TERMINATED` (as reported by
-
-        `GET /v1/runs/{run_id}`); calling it earlier returns `409`.
-
-
-        Note that by default, all artifacts are automatically deleted
-
-        30 days after the run finishes, regardless of whether the caller
-
-        explicitly requests such deletion.'
-      operationId: delete_run_items_v1_runs__run_id__artifacts_delete
-      security:
-      - OAuth2AuthorizationCodeBearer: []
-      parameters:
-      - name: run_id
-        in: path
-        required: true
-        schema:
-          type: string
-          format: uuid
-          description: Run id, returned by `POST /runs/` endpoint
-          title: Run Id
-        description: Run id, returned by `POST /runs/` endpoint
-      responses:
-        '200':
-          description: Run artifacts deleted
-          content:
-            application/json:
-              schema: {}
-        '404':
-          description: Run not found
-        '403':
-          description: Forbidden - You don't have permission to delete this run's artifacts
-        '409':
-          description: Conflict - The run has not terminated yet
-        '410':
-          description: Gone - Run artifacts have already been deleted
-        '422':
-          description: Validation Error
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/HTTPValidationError'
-  /v1/runs/{run_id}/custom-metadata:
-    put:
-      tags:
-      - Public
-      summary: Put Run Custom Metadata
-      description: 'Update the custom metadata of a run with the specified `run_id`.
-
-
-        Optionally, a checksum may be provided along the custom metadata JSON.
-
-        It can be used to verify if the custom metadata was updated since the last time it was accessed.
-
-        If the checksum is provided, it must match the existing custom metadata in the system, ensuring that the current
-
-        custom metadata value to be overwritten is acknowledged by the user.
-
-        If no checksum is provided, submitted metadata directly overwrites the existing metadata, without any checks.
-
-
-        The latest custom metadata and checksum can be retrieved for the run via the `GET /v1/runs/{run_id}` endpoint.
-
-
-        **Note on deadlines:** Run deadlines must be set during run creation and cannot be modified afterward.
-
-        Any deadline changes in custom metadata will be ignored by the system.'
-      operationId: put_run_custom_metadata_v1_runs__run_id__custom_metadata_put
-      security:
-      - OAuth2AuthorizationCodeBearer: []
-      parameters:
-      - name: run_id
-        in: path
-        required: true
-        schema:
-          type: string
-          format: uuid
-          description: Run id, returned by `POST /runs/` endpoint
-          title: Run Id
-        description: Run id, returned by `POST /runs/` endpoint
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/CustomMetadataUpdateRequest'
-      responses:
-        '200':
-          description: Custom metadata successfully updated
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/CustomMetadataUpdateResponse'
-        '404':
-          description: Run not found
-        '403':
-          description: Forbidden - You don't have permission to update this run
-        '412':
-          description: Precondition Failed - Checksum mismatch, resource has been modified
-        '422':
-          description: Validation Error
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/HTTPValidationError'
   /v1/runs/{run_id}/items/{external_id}/custom-metadata:
     put:
-      tags:
-      - Public
-      summary: Put Item Custom Metadata By Run
       description: 'Update the custom metadata of the item with the specified `external_id`, belonging to the specified run.
 
 
@@ -1153,39 +1248,37 @@ paths:
 
         and for all items of a run via `GET /v1/runs/{run_id}/items`.'
       operationId: put_item_custom_metadata_by_run_v1_runs__run_id__items__external_id__custom_metadata_put
-      security:
-      - OAuth2AuthorizationCodeBearer: []
       parameters:
-      - name: run_id
+      - description: The run id, returned by `POST /runs/` endpoint
         in: path
+        name: run_id
         required: true
         schema:
-          type: string
-          format: uuid
           description: The run id, returned by `POST /runs/` endpoint
+          format: uuid
           title: Run Id
-        description: The run id, returned by `POST /runs/` endpoint
-      - name: external_id
+          type: string
+      - description: The `external_id` that was defined for the item by the customer that triggered the run.
         in: path
+        name: external_id
         required: true
         schema:
-          type: string
           description: The `external_id` that was defined for the item by the customer that triggered the run.
           title: External Id
-        description: The `external_id` that was defined for the item by the customer that triggered the run.
+          type: string
       requestBody:
-        required: true
         content:
           application/json:
             schema:
               $ref: '#/components/schemas/CustomMetadataUpdateRequest'
+        required: true
       responses:
         '200':
-          description: Custom metadata successfully updated
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/CustomMetadataUpdateResponse'
+          description: Custom metadata successfully updated
         '403':
           description: Forbidden - You don't have permission to update this item
         '404':
@@ -1193,1194 +1286,232 @@ paths:
         '412':
           description: Precondition Failed - Checksum mismatch
         '422':
-          description: Validation Error
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/HTTPValidationError'
-  /v1/me:
-    get:
-      tags:
-      - Public
-      summary: Get current user
-      description: 'Retrieves your identity details, including name, email, and organization.
-
-        This is useful for verifying that the request is being made under the correct user profile
-
-        and organization context, as well as confirming that the expected environment variables are correctly set
-
-        (in case you are using Python SDK)'
-      operationId: get_me_v1_me_get
-      responses:
-        '200':
-          description: Successful Response
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/MeReadResponse'
-      security:
-      - OAuth2AuthorizationCodeBearer: []
-  /v1/applications/{application_id}/versions/{version}/documents:
-    get:
-      tags:
-      - Public
-      summary: List version documents
-      description: 'List public documents attached to an application version.
-
-
-        Returns only documents with ``visibility=public`` and ``status=uploaded``.'
-      operationId: list_version_documents
-      security:
-      - OAuth2AuthorizationCodeBearer: []
-      parameters:
-      - name: application_id
-        in: path
-        required: true
-        schema:
-          type: string
-          title: Application Id
-      - name: version
-        in: path
-        required: true
-        schema:
-          type: string
-          title: Version
-      responses:
-        '200':
-          description: Successful Response
-          content:
-            application/json:
-              schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/VersionDocumentResponse'
-                title: Response List Version Documents
-        '404':
-          description: Application version not found or not accessible
-        '422':
           description: Validation Error
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/HTTPValidationError'
-  /v1/applications/{application_id}/versions/{version}/documents/{name}:
-    get:
-      tags:
-      - Public
-      summary: Get version document metadata
-      description: Return metadata for a single public document attached to an application version.
-      operationId: get_version_document
       security:
       - OAuth2AuthorizationCodeBearer: []
-      parameters:
-      - name: application_id
-        in: path
-        required: true
-        schema:
-          type: string
-          title: Application Id
-      - name: version
-        in: path
-        required: true
-        schema:
-          type: string
-          title: Version
-      - name: name
-        in: path
-        required: true
-        schema:
-          type: string
-          title: Name
-      responses:
-        '200':
-          description: Successful Response
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/VersionDocumentResponse'
-        '404':
-          description: Document not found, not public, or version not accessible
-        '422':
-          description: Validation Error
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/HTTPValidationError'
-  /v1/applications/{application_id}/versions/{version}/documents/{name}/file:
-    get:
+      summary: Put Item Custom Metadata By Run
       tags:
       - Public
-      summary: Download version document (browser)
-      description: '307 redirect to a short-lived GCS signed URL for downloading a document.
-
-
-        The signed URL includes ``response-content-disposition=attachment; filename=""``
-
-        so browsers prompt a save-as dialog rather than rendering inline.
-
-        Response carries ``Cache-Control: no-store``.'
-      operationId: get_version_document_file
-      security:
-      - OAuth2AuthorizationCodeBearer: []
-      parameters:
-      - name: application_id
-        in: path
-        required: true
-        schema:
-          type: string
-          title: Application Id
-      - name: version
-        in: path
-        required: true
-        schema:
-          type: string
-          title: Version
-      - name: name
-        in: path
-        required: true
-        schema:
-          type: string
-          title: Name
-      responses:
-        '307':
-          description: 'Temporary redirect to signed GCS URL with Content-Disposition: attachment'
-        '404':
-          description: Document not found, not public, or version not accessible
-        '422':
-          description: Validation Error
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/HTTPValidationError'
-  /v1/applications/{application_id}/versions/{version}/documents/{name}/content:
-    get:
-      tags:
-      - Public
-      summary: Stream version document content (programmatic)
-      description: '307 redirect to a short-lived GCS signed URL for streaming document content.
-
-
-        Unlike ``/file``, no ``Content-Disposition`` override is set — GCS serves
-
-        the object body with its stored ``Content-Type``. Intended for programmatic
-
-        clients that follow redirects and consume the content directly.
-
-        Response carries ``Cache-Control: no-store``.'
-      operationId: get_version_document_content
-      security:
-      - OAuth2AuthorizationCodeBearer: []
-      parameters:
-      - name: application_id
-        in: path
-        required: true
-        schema:
-          type: string
-          title: Application Id
-      - name: version
-        in: path
-        required: true
-        schema:
-          type: string
-          title: Version
-      - name: name
-        in: path
-        required: true
-        schema:
-          type: string
-          title: Name
-      responses:
-        '307':
-          description: Temporary redirect to signed GCS URL; GCS serves the object with its stored Content-Type
-        '404':
-          description: Document not found, not public, or version not accessible
-        '422':
-          description: Validation Error
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/HTTPValidationError'
-  /v1/access/grants:
-    post:
-      tags:
-      - Public
-      summary: Create Grant
-      description: Create a grant to share access to a resource with a subject (user or organization).
-      operationId: create_grant_v1_access_grants_post
-      security:
-      - OAuth2AuthorizationCodeBearer: []
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/GrantCreateRequest'
-      responses:
-        '201':
-          description: Successful Response
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/GrantReadResponse'
-        '403':
-          description: Forbidden - You don't have permission to grant access to this resource
-        '404':
-          description: Resource not found
-        '422':
-          description: Unprocessable Entity - Only viewer grants can be created
-    get:
-      tags:
-      - Public
-      summary: List Grants
-      description: 'List grants.
-
-
-        Org admins see all grants for all resources in their organization.
-
-        Regular users see grants for all resources they submitted.'
-      operationId: list_grants_v1_access_grants_get
-      security:
-      - OAuth2AuthorizationCodeBearer: []
-      parameters:
-      - name: resource_type
-        in: query
-        required: false
-        schema:
-          anyOf:
-          - $ref: '#/components/schemas/ResourceType'
-          - type: 'null'
-          title: Resource Type
-      - name: resource_id
-        in: query
-        required: false
-        schema:
-          anyOf:
-          - type: string
-            format: uuid
-          - type: 'null'
-          title: Resource Id
-      - name: subject_type
-        in: query
-        required: false
-        schema:
-          anyOf:
-          - $ref: '#/components/schemas/SubjectType'
-          - type: 'null'
-          title: Subject Type
-      - name: subject_id
-        in: query
-        required: false
-        schema:
-          anyOf:
-          - type: string
-          - type: 'null'
-          title: Subject Id
-      - name: relation
-        in: query
-        required: false
-        schema:
-          anyOf:
-          - type: array
-            items:
-              $ref: '#/components/schemas/GrantRelation'
-          - type: 'null'
-          description: Filter grants by relation type. Can be specified multiple times.
-          title: Relation
-        description: Filter grants by relation type. Can be specified multiple times.
-      - name: revoked
-        in: query
-        required: false
-        schema:
-          anyOf:
-          - type: boolean
-          - type: 'null'
-          title: Revoked
-      - name: page
-        in: query
-        required: false
-        schema:
-          type: integer
-          minimum: 1
-          default: 1
-          title: Page
-      - name: page_size
-        in: query
-        required: false
-        schema:
-          type: integer
-          maximum: 100
-          minimum: 5
-          default: 50
-          title: Page Size
-      - name: sort
-        in: query
-        required: false
-        schema:
-          anyOf:
-          - type: array
-            items:
-              type: string
-          - type: 'null'
-          description: Sort the results by one or more fields. Use `+` for ascending and `-` for descending order.
-          title: Sort
-        description: Sort the results by one or more fields. Use `+` for ascending and `-` for descending order.
-      responses:
-        '200':
-          description: Successful Response
-          content:
-            application/json:
-              schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/GrantReadResponse'
-                title: Response List Grants V1 Access Grants Get
-        '422':
-          description: Validation Error
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/HTTPValidationError'
-  /v1/access/grants/{grant_id}:
-    get:
-      tags:
-      - Public
-      summary: Get Grant
-      description: Get a grant by its ID.
-      operationId: get_grant_v1_access_grants__grant_id__get
-      security:
-      - OAuth2AuthorizationCodeBearer: []
-      parameters:
-      - name: grant_id
-        in: path
-        required: true
-        schema:
-          type: string
-          format: uuid
-          description: Grant ID
-          title: Grant Id
-        description: Grant ID
-      responses:
-        '200':
-          description: Successful Response
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/GrantReadResponse'
-        '403':
-          description: Forbidden - You don't have permission to view this grant
-        '404':
-          description: Grant not found
-        '422':
-          description: Validation Error
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/HTTPValidationError'
-    delete:
-      tags:
-      - Public
-      summary: Revoke Grant
-      description: Revoke a grant by its ID. Sets the revoked_at timestamp on the grant.
-      operationId: revoke_grant_v1_access_grants__grant_id__delete
-      security:
-      - OAuth2AuthorizationCodeBearer: []
-      parameters:
-      - name: grant_id
-        in: path
-        required: true
-        schema:
-          type: string
-          format: uuid
-          description: Grant ID
-          title: Grant Id
-        description: Grant ID
-      responses:
-        '200':
-          description: Successful Response
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/GrantReadResponse'
-        '403':
-          description: Forbidden - You don't have permission to revoke this grant
-        '404':
-          description: Grant not found
-        '409':
-          description: Conflict - Grant is already revoked
-        '422':
-          description: Validation Error
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/HTTPValidationError'
-  /v1/access/share-tokens:
-    post:
-      tags:
-      - Public
-      summary: Create Share Token
-      description: 'Create a share token. The returned share_token value is shown only once and is never stored.
-
-        Use POST /access/grants with subject_type=share_token to grant access to a resource.'
-      operationId: create_share_token_v1_access_share_tokens_post
-      security:
-      - OAuth2AuthorizationCodeBearer: []
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/ShareTokenCreateRequest'
-      responses:
-        '201':
-          description: Successful Response
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ShareTokenCreateResponse'
-        '422':
-          description: Validation Error
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/HTTPValidationError'
-    get:
-      tags:
-      - Public
-      summary: List Share Tokens
-      description: List share tokens. Service and Superadmin see all tokens; other users see only their own.
-      operationId: list_share_tokens_v1_access_share_tokens_get
-      security:
-      - OAuth2AuthorizationCodeBearer: []
-      parameters:
-      - name: run_id
-        in: query
-        required: false
-        schema:
-          anyOf:
-          - type: string
-            format: uuid
-          - type: 'null'
-          description: Filter by run ID
-          title: Run Id
-        description: Filter by run ID
-      - name: created_by
-        in: query
-        required: false
-        schema:
-          anyOf:
-          - type: string
-          - type: 'null'
-          description: Filter by share token creator
-          title: Created By
-        description: Filter by share token creator
-      - name: revoked
-        in: query
-        required: false
-        schema:
-          anyOf:
-          - type: boolean
-          - type: 'null'
-          title: Revoked
-      - name: page
-        in: query
-        required: false
-        schema:
-          type: integer
-          minimum: 1
-          default: 1
-          title: Page
-      - name: page_size
-        in: query
-        required: false
-        schema:
-          type: integer
-          maximum: 100
-          minimum: 5
-          default: 50
-          title: Page Size
-      - name: sort
-        in: query
-        required: false
-        schema:
-          anyOf:
-          - type: array
-            items:
-              type: string
-          - type: 'null'
-          description: Sort the results by one or more fields. Use `+` for ascending and `-` for descending order.
-          title: Sort
-        description: Sort the results by one or more fields. Use `+` for ascending and `-` for descending order.
-      responses:
-        '200':
-          description: Successful Response
-          content:
-            application/json:
-              schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/ShareTokenReadResponse'
-                title: Response List Share Tokens V1 Access Share Tokens Get
-        '422':
-          description: Validation Error
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/HTTPValidationError'
-  /v1/access/share-tokens/{share_token_id}:
-    get:
-      tags:
-      - Public
-      summary: Get Share Token
-      description: Get a share token by its ID.
-      operationId: get_share_token_v1_access_share_tokens__share_token_id__get
-      security:
-      - OAuth2AuthorizationCodeBearer: []
-      parameters:
-      - name: share_token_id
-        in: path
-        required: true
-        schema:
-          type: string
-          format: uuid
-          description: Share token ID
-          title: Share Token Id
-        description: Share token ID
-      responses:
-        '200':
-          description: Successful Response
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ShareTokenReadResponse'
-        '403':
-          description: Forbidden - You don't have permission to view this share token
-        '404':
-          description: Share token not found
-        '422':
-          description: Validation Error
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/HTTPValidationError'
-    delete:
-      tags:
-      - Public
-      summary: Revoke Share Token
-      description: Revoke a share token by its ID. Invalidates the credential regardless of any active grants.
-      operationId: revoke_share_token_v1_access_share_tokens__share_token_id__delete
-      security:
-      - OAuth2AuthorizationCodeBearer: []
-      parameters:
-      - name: share_token_id
-        in: path
-        required: true
-        schema:
-          type: string
-          format: uuid
-          description: Share token ID
-          title: Share Token Id
-        description: Share token ID
-      responses:
-        '200':
-          description: Successful Response
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ShareTokenReadResponse'
-        '403':
-          description: Forbidden - You don't have permission to revoke this share token
-        '404':
-          description: Share token not found
-        '409':
-          description: Conflict - Share token is already revoked
-        '422':
-          description: Validation Error
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/HTTPValidationError'
 components:
   schemas:
-    OutputArtifact:
+    RunItemStatistics:
       properties:
-        name:
-          type: string
-          title: Name
-        mime_type:
-          type: string
-          pattern: ^\w+\/\w+[-+.|\w+]+\w+$
-          title: Mime Type
-          examples:
-          - application/vnd.apache.parquet
-        metadata_schema:
-          additionalProperties: true
-          type: object
-          title: Metadata Schema
-        scope:
-          $ref: '#/components/schemas/OutputArtifactScope'
-        visibility:
-          $ref: '#/components/schemas/OutputArtifactVisibility'
-      type: object
+        item_count:
+          description: Total number of the items in the run
+          title: Item Count
+          type: integer
+        item_pending_count:
+          description: The number of items in `PENDING` state
+          title: Item Pending Count
+          type: integer
+        item_processing_count:
+          description: The number of items in `PROCESSING` state
+          title: Item Processing Count
+          type: integer
+        item_skipped_count:
+          description: The number of items in `TERMINATED` state, and the item termination reason is `SKIPPED`
+          title: Item Skipped Count
+          type: integer
+        item_succeeded_count:
+          description: The number of items in `TERMINATED` state, and the item termination reason is `SUCCEEDED`
+          title: Item Succeeded Count
+          type: integer
+        item_system_error_count:
+          description: The number of items in `TERMINATED` state, and the item termination reason is `SYSTEM_ERROR`
+          title: Item System Error Count
+          type: integer
+        item_user_error_count:
+          description: The number of items in `TERMINATED` state, and the item termination reason is `USER_ERROR`
+          title: Item User Error Count
+          type: integer
       required:
-      - name
-      - mime_type
-      - metadata_schema
-      - scope
-      - visibility
-      title: OutputArtifact
-    GrantReadResponse:
-      properties:
-        grant_id:
-          type: string
-          format: uuid
-          title: Grant Id
-        resource_type:
-          $ref: '#/components/schemas/ResourceType'
-        resource_id:
-          type: string
-          format: uuid
-          title: Resource Id
-        subject_type:
-          $ref: '#/components/schemas/SubjectType'
-        subject_id:
-          type: string
-          title: Subject Id
-        relation:
-          $ref: '#/components/schemas/GrantRelation'
-        created_by:
-          type: string
-          title: Created By
-        created_at:
-          type: string
-          format: date-time
-          title: Created At
-        revoked:
-          type: boolean
-          title: Revoked
+      - item_count
+      - item_pending_count
+      - item_processing_count
+      - item_user_error_count
+      - item_system_error_count
+      - item_skipped_count
+      - item_succeeded_count
+      title: RunItemStatistics
       type: object
-      required:
-      - grant_id
-      - resource_type
-      - resource_id
-      - subject_type
-      - subject_id
-      - relation
-      - created_by
-      - created_at
-      - revoked
-      title: GrantReadResponse
-    ItemResultReadResponse:
-      properties:
-        item_id:
-          type: string
-          format: uuid
-          title: Item Id
-          description: Item UUID generated by the Platform
-        external_id:
-          type: string
-          title: External Id
-          description: The external_id of the item from the user payload
-          examples:
-          - slide_1
-        custom_metadata:
-          anyOf:
-          - additionalProperties: true
-            type: object
-          - type: 'null'
-          title: Custom Metadata
-          description: The custom_metadata of the item that has been provided by the user on run creation.
-        custom_metadata_checksum:
-          anyOf:
-          - type: string
-          - type: 'null'
-          title: Custom Metadata Checksum
-          description: 'The checksum of the `custom_metadata` field.
-
-            Can be used in the `PUT /runs/{run-id}/items/{external_id}/custom_metadata`
-
-            request to avoid unwanted override of the values in concurrent requests.'
-          examples:
-          - f54fe109
-        queue_position_org:
-          anyOf:
-          - type: integer
-          - type: 'null'
-          title: Queue Position Org
-          description: The position of the item in the organization's queue.
-        queue_position_platform:
-          anyOf:
-          - type: integer
-          - type: 'null'
-          title: Queue Position Platform
-          description: The position of the item in the platform's queue.
-        state:
-          $ref: '#/components/schemas/ItemState'
-          description: "\nThe item moves from `PENDING` to `PROCESSING` to `TERMINATED` state.\nWhen terminated, consult the `termination_reason` property to see whether it was successful.\n    "
-        output:
-          $ref: '#/components/schemas/ItemOutput'
-          description: The output status of the item (NONE, FULL)
-        termination_reason:
-          anyOf:
-          - $ref: '#/components/schemas/ItemTerminationReason'
-          - type: 'null'
-          description: '
-
-            When the `state` is `TERMINATED` this will explain why
-
-            `SUCCEEDED` -> Successful processing.
-
-            `USER_ERROR` -> Failed because the provided input was invalid.
-
-            `SYSTEM_ERROR` -> There was an error in the model or platform.
-
-            `SKIPPED` -> Was cancelled
-
-            '
-        error_code:
-          anyOf:
-          - type: string
-          - type: 'null'
-          title: Error Code
-        error_message:
-          anyOf:
-          - type: string
-          - type: 'null'
-          title: Error Message
-          description: "\n    The error message in case the `termination_reason` is in `USER_ERROR` or `SYSTEM_ERROR`\n        "
-          examples:
-          - This item was not processed because the threshold of 3 items finishing in error state (user or system error) was reached before the item was processed.
-          - The item was not processed because the run was cancelled by the user before the item was processed.
-          - 'User error raised by Application because the input data provided by the user cannot be processed:
-
-            The image width is 123000 px, but the maximum width is 100000 px'
-          - "A system error occurred during the item execution:\n System went out of memory in cell classification"
-          - An unknown system error occurred during the item execution
-        terminated_at:
-          anyOf:
-          - type: string
-            format: date-time
-          - type: 'null'
-          title: Terminated At
-          description: Timestamp showing when the item reached a terminal state.
-          examples:
-          - '2024-01-15T10:30:45.123Z'
-        input_artifacts:
-          items:
-            $ref: '#/components/schemas/InputArtifactResultReadResponse'
-          type: array
-          title: Input Artifacts
-          description: "\nThe input artifact(s) provided by the user. For most applications, this will be one artifact that\ndefines the whole slide image to be processed.\n    "
-        output_artifacts:
-          items:
-            $ref: '#/components/schemas/OutputArtifactResultReadResponse'
-          type: array
-          title: Output Artifacts
-          description: "\nThe list of the results generated by the application algorithm. The number of files and their\ntypes depend on the particular application version, call `/v1/versions/{version_id}` to get\nthe details.\n    "
-      type: object
-      required:
-      - item_id
-      - external_id
-      - custom_metadata
-      - state
-      - output
-      - input_artifacts
-      - output_artifacts
-      title: ItemResultReadResponse
-      description: Response schema for items in `List Run Items` endpoint
-    InputArtifactResultReadResponse:
-      properties:
-        input_artifact_id:
-          type: string
-          format: uuid
-          title: Input Artifact Id
-          description: The Id of the artifact. Used internally
-        name:
-          type: string
-          title: Name
-          description: Name of the input from the schema from the `/v1/versions/{version_id}` endpoint.
-          examples:
-          - whole_slide_image
-        metadata:
-          anyOf:
-          - additionalProperties: true
-            type: object
-          - type: 'null'
-          title: Metadata
-          description: The metadata of the input artifact, provided by the user.
-        download_url:
-          anyOf:
-          - type: string
-            maxLength: 2083
-            minLength: 1
-            format: uri
-          - type: 'null'
-          title: Download Url
-          description: The download URL to for the input artifact provided by the user.
-      type: object
-      required:
-      - input_artifact_id
-      - name
-      title: InputArtifactResultReadResponse
-    ItemTerminationReason:
+    OutputArtifactVisibility:
+      enum:
+      - INTERNAL
+      - EXTERNAL
+      title: OutputArtifactVisibility
       type: string
+    ItemTerminationReason:
       enum:
       - SUCCEEDED
       - USER_ERROR
       - SYSTEM_ERROR
       - SKIPPED
       title: ItemTerminationReason
-    ApplicationVersion:
-      properties:
-        number:
-          type: string
-          pattern: ^(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)(?:-((?:0|[1-9]\d*|\d*[a-zA-Z-][0-9a-zA-Z-]*)(?:\.(?:0|[1-9]\d*|\d*[a-zA-Z-][0-9a-zA-Z-]*))*))?(?:\+([0-9a-zA-Z-]+(?:\.[0-9a-zA-Z-]+)*))?$
-          title: Number
-          description: The number of the latest version
-          examples:
-          - 1.0.0
-        released_at:
-          type: string
-          format: date-time
-          title: Released At
-          description: The timestamp for when the application version was made available in the Platform
-          examples:
-          - '2025-09-15T10:30:45.123Z'
-      type: object
-      required:
-      - number
-      - released_at
-      title: ApplicationVersion
-    HTTPValidationError:
-      properties:
-        detail:
-          items:
-            $ref: '#/components/schemas/ValidationError'
-          type: array
-          title: Detail
-      type: object
-      title: HTTPValidationError
-    SchedulingResponse:
-      properties:
-        due_date:
-          anyOf:
-          - type: string
-            format: date-time
-          - type: 'null'
-          title: Due Date
-        deadline:
-          anyOf:
-          - type: string
-            format: date-time
-          - type: 'null'
-          title: Deadline
-      type: object
-      title: SchedulingResponse
-      description: Scheduling fields returned in run responses.
-    RunReadResponse:
-      properties:
-        run_id:
-          type: string
-          format: uuid
-          title: Run Id
-          description: UUID of the application
-        application_id:
-          type: string
-          title: Application Id
-          description: Application id
-          examples:
-          - he-tme
-        version_number:
-          type: string
-          title: Version Number
-          description: Application version number
-          examples:
-          - 0.4.4
-        state:
-          $ref: '#/components/schemas/RunState'
-          description: 'When the run request is received by the Platform, the `state` of it is set to
-
-            `PENDING`. The state changes to `PROCESSING` when at least one item is being processed. After `PROCESSING`, the
-
-            state of the run can switch back to `PENDING` if there are no processing items, or to `TERMINATED` when the run
-
-            finished processing.'
-        output:
-          $ref: '#/components/schemas/RunOutput'
-          description: 'The status of the output of the run. When 0 items are successfully processed the output is
-
-            `NONE`, after one item is successfully processed, the value is set to `PARTIAL`. When all items of the run are
-
-            successfully processed, the output is set to `FULL`.'
-        termination_reason:
-          anyOf:
-          - $ref: '#/components/schemas/RunTerminationReason'
-          - type: 'null'
-          description: "The termination reason of the run. When the run is not in `TERMINATED` state, the\n        termination_reason is `null`. If all items of of the run are processed (successfully or with an error), then\n        termination_reason is set to `ALL_ITEMS_PROCESSED`. If the run is cancelled by the user, the value is set to\n        `CANCELED_BY_USER`. If the run reaches the threshold of number of failed items, the Platform cancels the run\n        and sets the termination_reason to `CANCELED_BY_SYSTEM`.\n        "
-        error_code:
-          anyOf:
-          - type: string
-          - type: 'null'
-          title: Error Code
-          description: "When the termination_reason is set to CANCELED_BY_SYSTEM, the error_code is set to define the\n        structured description of the error."
-          examples:
-          - SCHEDULER.ITEMS_WITH_ERROR_THRESHOLD_REACHED
-        error_message:
-          anyOf:
-          - type: string
-          - type: 'null'
-          title: Error Message
-          description: "When the termination_reason is set to CANCELED_BY_SYSTEM, the error_message is set to provide\n        more insights to the error cause."
-          examples:
-          - Run canceled given errors on more than 10 items.
-        statistics:
-          $ref: '#/components/schemas/RunItemStatistics'
-          description: Aggregated statistics of the run execution
-        custom_metadata:
-          anyOf:
-          - additionalProperties: true
-            type: object
-          - type: 'null'
-          title: Custom Metadata
-          description: Optional JSON metadata that was stored in alongside the run by the user
-          examples:
-          - department: D1
-            study: abc-1
-        custom_metadata_checksum:
-          anyOf:
-          - type: string
-          - type: 'null'
-          title: Custom Metadata Checksum
-          description: 'The checksum of the `custom_metadata` field. Can be used in the `PUT /runs/{run-id}/custom_metadata`
-
-            request to avoid unwanted override of the values in concurrent requests.'
-          examples:
-          - f54fe109
-        submitted_at:
-          type: string
-          format: date-time
-          title: Submitted At
-          description: Timestamp showing when the run was triggered
-        submitted_by:
-          type: string
-          title: Submitted By
-          description: Id of the user who triggered the run
-          examples:
-          - auth0|123456
-        organization_id:
-          anyOf:
-          - type: string
-          - type: 'null'
-          title: Organization Id
-          description: Uniquely identifies the organization the Run was created for
-        terminated_at:
-          anyOf:
-          - type: string
-            format: date-time
-          - type: 'null'
-          title: Terminated At
-          description: Timestamp showing when the run reached a terminal state.
-          examples:
-          - '2024-01-15T10:30:45.123Z'
-        num_preceding_items_org:
-          anyOf:
-          - type: integer
-          - type: 'null'
-          title: Num Preceding Items Org
-          description: How many Items from other Runs in the same Organization are due to begin processing before this Run's next Item does.
-        num_preceding_items_platform:
-          anyOf:
-          - type: integer
-          - type: 'null'
-          title: Num Preceding Items Platform
-          description: How many Items from other Runs are due to begin processing before this Run's next Item does.
-        scheduling:
-          anyOf:
-          - $ref: '#/components/schemas/SchedulingResponse'
-          - type: 'null'
-          description: Scheduling constraints set for this run.
-      type: object
-      required:
-      - run_id
-      - application_id
-      - version_number
-      - state
-      - output
-      - termination_reason
-      - error_code
-      - error_message
-      - statistics
-      - submitted_at
-      - submitted_by
-      title: RunReadResponse
-      description: Response schema for `Get run details` endpoint
-    RunState:
       type: string
-      enum:
-      - PENDING
-      - PROCESSING
-      - TERMINATED
-      title: RunState
-    OutputArtifactScope:
-      type: string
-      enum:
-      - ITEM
-      - GLOBAL
-      title: OutputArtifactScope
-    RunCreationResponse:
-      properties:
-        run_id:
-          type: string
-          format: uuid
-          title: Run Id
-          examples:
-          - 3fa85f64-5717-4562-b3fc-2c963f66afa6
-      type: object
-      required:
-      - run_id
-      title: RunCreationResponse
-    ShareTokenCreateResponse:
-      properties:
-        share_token_id:
-          type: string
-          format: uuid
-          title: Share Token Id
-        share_token:
-          type: string
-          title: Share Token
-        created_at:
-          type: string
-          format: date-time
-          title: Created At
-        expires_at:
-          anyOf:
-          - type: string
-            format: date-time
-          - type: 'null'
-          title: Expires At
-        revoked:
-          type: boolean
-          title: Revoked
-      type: object
-      required:
-      - share_token_id
-      - share_token
-      - created_at
-      - expires_at
-      - revoked
-      title: ShareTokenCreateResponse
-      description: Returned only on POST — includes the one-time share_token.
-    VersionDocumentVisibility:
-      type: string
-      enum:
-      - public
-      - internal
-      title: VersionDocumentVisibility
     ItemState:
-      type: string
       enum:
       - PENDING
       - PROCESSING
       - TERMINATED
       title: ItemState
-    GrantCreateRequest:
+      type: string
+    ApplicationReadShortResponse:
+      description: Response schema for `List available applications` and `Read Application by Id` endpoints
       properties:
-        resource_type:
-          $ref: '#/components/schemas/ResourceType'
-        resource_id:
-          type: string
-          format: uuid
-          title: Resource Id
-        subject_type:
-          $ref: '#/components/schemas/SubjectType'
-        subject_id:
-          anyOf:
-          - type: string
-          - type: 'null'
-          title: Subject Id
-        subject_email:
-          anyOf:
-          - type: string
-          - type: 'null'
-          title: Subject Email
-        relation:
-          $ref: '#/components/schemas/GrantRelation'
-      type: object
-      required:
-      - resource_type
-      - resource_id
-      - subject_type
-      - relation
-      title: GrantCreateRequest
-    OrganizationReadResponse:
-      properties:
-        id:
-          type: string
-          title: Id
-          description: Unique organization identifier
+        application_id:
+          description: Application ID
           examples:
-          - org_123456
+          - he-tme
+          title: Application Id
+          type: string
+        description:
+          description: 'Describing what the application can do '
+          examples:
+          - The Atlas H&E TME is an AI application designed to examine FFPE (formalin-fixed, paraffin-embedded) tissues stained with H&E (hematoxylin and eosin), delivering comprehensive insights into the tumor microenvironment.
+          title: Description
+          type: string
+        latest_version:
+          anyOf:
+          - $ref: '#/components/schemas/ApplicationVersion'
+          - type: 'null'
+          description: The version with highest version number available to the user
         name:
-          anyOf:
-          - type: string
-          - type: 'null'
+          description: Application display name
+          examples:
+          - Atlas H&E-TME
           title: Name
-          description: Organization name (E.g. “aignx”)
+          type: string
+        regulatory_classes:
+          description: 'Regulatory classes, to which the applications comply with. Possible values include: RUO, IVDR, FDA.'
           examples:
-          - aignx
-        display_name:
+          - - RUO
+          items:
+            type: string
+          title: Regulatory Classes
+          type: array
+      required:
+      - application_id
+      - name
+      - regulatory_classes
+      - description
+      title: ApplicationReadShortResponse
+      type: object
+    RunCreationRequest:
+      description: 'Request schema for `Initiate Run` endpoint.
+
+        It describes which application version is chosen, and which user data should be processed.'
+      properties:
+        application_id:
+          description: Unique ID for the application to use for processing
+          examples:
+          - he-tme
+          title: Application Id
+          type: string
+        custom_metadata:
+          anyOf:
+          - additionalProperties: true
+            type: object
+          - type: 'null'
+          description: Optional JSON metadata to store additional information alongside the run
+          examples:
+          - department: D1
+            study: abc-1
+          title: Custom Metadata
+        items:
+          description: List of items (slides) to process. Each item represents a whole slide image (WSI) with its associated metadata and artifacts
+          examples:
+          - - external_id: slide_1
+              input_artifacts:
+              - download_url: https://example-bucket.s3.amazonaws.com/slide1.tiff?signature=...
+                metadata:
+                  checksum_base64_crc32c: 64RKKA==
+                  height_px: 87761
+                  media-type: image/tiff
+                  resolution_mpp: 0.2628238
+                  specimen:
+                    disease: LUNG_CANCER
+                    tissue: LUNG
+                  staining_method: H&E
+                  width_px: 136223
+                name: input_slide
+          items:
+            $ref: '#/components/schemas/ItemCreationRequest'
+          minItems: 1
+          title: Items
+          type: array
+        scheduling:
+          anyOf:
+          - $ref: '#/components/schemas/SchedulingRequest'
+          - type: 'null'
+          description: Optional scheduling constraints for this run.
+          examples:
+          - deadline: '2026-03-05T23:59:59Z'
+            due_date: '2026-03-04T23:59:59Z'
+        version_number:
           anyOf:
           - type: string
           - type: 'null'
-          title: Display Name
-          description: Public organization name (E.g. “Aignostics GmbH”)
+          description: Semantic version of the application to use for processing. If not provided, the latest available version will be used
           examples:
-          - Aignostics GmbH
-        aignostics_bucket_hmac_access_key_id:
-          type: string
-          title: Aignostics Bucket Hmac Access Key Id
-          description: HMAC access key ID for the Aignostics-provided storage bucket. Used to authenticate requests for uploading files and generating signed URLs
-          examples:
-          - YOUR_HMAC_ACCESS_KEY_ID
-        aignostics_bucket_hmac_secret_access_key:
-          type: string
-          title: Aignostics Bucket Hmac Secret Access Key
-          description: HMAC secret access key paired with the access key ID. Keep this credential secure.
-          examples:
-          - YOUR/HMAC/SECRET_ACCESS_KEY
-        aignostics_bucket_name:
-          type: string
-          title: Aignostics Bucket Name
-          description: Name of the bucket provided by Aignostics for storing input artifacts (slide images)
-          examples:
-          - aignostics-platform-bucket
-        aignostics_bucket_protocol:
-          type: string
-          title: Aignostics Bucket Protocol
-          description: Protocol to use for bucket access. Defines the URL scheme for connecting to the storage service
-          examples:
-          - gs
-        aignostics_logfire_token:
-          type: string
-          title: Aignostics Logfire Token
-          description: Authentication token for Logfire observability service. Enables sending application logs and performance metrics to Aignostics for monitoring and support
-          examples:
-          - your-logfire-token
-        aignostics_sentry_dsn:
-          type: string
-          title: Aignostics Sentry Dsn
-          description: Data Source Name (DSN) for Sentry error tracking service. Allows automatic reporting of errors and exceptions to Aignostics support team
-          examples:
-          - https://2354s3#ewsha@o44.ingest.us.sentry.io/34345123432
-      type: object
+          - 1.0.0-beta1
+          title: Version Number
       required:
-      - id
-      - aignostics_bucket_hmac_access_key_id
-      - aignostics_bucket_hmac_secret_access_key
-      - aignostics_bucket_name
-      - aignostics_bucket_protocol
-      - aignostics_logfire_token
-      - aignostics_sentry_dsn
-      title: OrganizationReadResponse
+      - application_id
+      - items
+      title: RunCreationRequest
+      type: object
+    ValidationError:
+      properties:
+        ctx:
+          title: Context
+          type: object
+        input:
+          title: Input
+        loc:
+          items:
+            anyOf:
+            - type: string
+            - type: integer
+          title: Location
+          type: array
+        msg:
+          title: Message
+          type: string
+        type:
+          title: Error Type
+          type: string
+      required:
+      - loc
+      - msg
+      - type
+      title: ValidationError
+      type: object
+    InputArtifact:
+      properties:
+        metadata_schema:
+          additionalProperties: true
+          title: Metadata Schema
+          type: object
+        mime_type:
+          examples:
+          - image/tiff
+          pattern: ^\w+\/\w+[-+.|\w+]+\w+$
+          title: Mime Type
+          type: string
+        name:
+          title: Name
+          type: string
+      required:
+      - name
+      - mime_type
+      - metadata_schema
+      title: InputArtifact
+      type: object
+    OrganizationReadResponse:
       description: 'Part of response schema for Organization object in `Get current user` endpoint.
 
         This model corresponds to the response schema returned from
@@ -2407,600 +1538,99 @@ components:
         Additionally, logging and error reporting tokens enable Aignostics to provide better support and monitor
 
         system performance for your integration.'
-    CustomMetadataUpdateRequest:
       properties:
-        custom_metadata:
-          anyOf:
-          - additionalProperties: true
-            type: object
-          - type: 'null'
-          title: Custom Metadata
-          description: JSON metadata that should be set for the run
+        aignostics_bucket_hmac_access_key_id:
+          description: HMAC access key ID for the Aignostics-provided storage bucket. Used to authenticate requests for uploading files and generating signed URLs
           examples:
-          - department: D1
-            study: abc-1
-        custom_metadata_checksum:
+          - YOUR_HMAC_ACCESS_KEY_ID
+          title: Aignostics Bucket Hmac Access Key Id
+          type: string
+        aignostics_bucket_hmac_secret_access_key:
+          description: HMAC secret access key paired with the access key ID. Keep this credential secure.
+          examples:
+          - YOUR/HMAC/SECRET_ACCESS_KEY
+          title: Aignostics Bucket Hmac Secret Access Key
+          type: string
+        aignostics_bucket_name:
+          description: Name of the bucket provided by Aignostics for storing input artifacts (slide images)
+          examples:
+          - aignostics-platform-bucket
+          title: Aignostics Bucket Name
+          type: string
+        aignostics_bucket_protocol:
+          description: Protocol to use for bucket access. Defines the URL scheme for connecting to the storage service
+          examples:
+          - gs
+          title: Aignostics Bucket Protocol
+          type: string
+        aignostics_logfire_token:
+          description: Authentication token for Logfire observability service. Enables sending application logs and performance metrics to Aignostics for monitoring and support
+          examples:
+          - your-logfire-token
+          title: Aignostics Logfire Token
+          type: string
+        aignostics_sentry_dsn:
+          description: Data Source Name (DSN) for Sentry error tracking service. Allows automatic reporting of errors and exceptions to Aignostics support team
+          examples:
+          - https://2354s3#ewsha@o44.ingest.us.sentry.io/34345123432
+          title: Aignostics Sentry Dsn
+          type: string
+        display_name:
           anyOf:
           - type: string
           - type: 'null'
-          title: Custom Metadata Checksum
-          description: Optional field to verify that the latest custom metadata was known. If set to the checksum retrieved via the /runs endpoint, it must match the checksum of the current value in the database.
+          description: Public organization name (E.g. “Aignostics GmbH”)
           examples:
-          - f54fe109
-      type: object
-      title: CustomMetadataUpdateRequest
-    InputArtifact:
-      properties:
-        name:
-          type: string
-          title: Name
-        mime_type:
-          type: string
-          pattern: ^\w+\/\w+[-+.|\w+]+\w+$
-          title: Mime Type
-          examples:
-          - image/tiff
-        metadata_schema:
-          additionalProperties: true
-          type: object
-          title: Metadata Schema
-      type: object
-      required:
-      - name
-      - mime_type
-      - metadata_schema
-      title: InputArtifact
-    VersionDocumentResponse:
-      properties:
+          - Aignostics GmbH
+          title: Display Name
         id:
-          type: string
-          format: uuid
+          description: Unique organization identifier
+          examples:
+          - org_123456
           title: Id
+          type: string
         name:
-          type: string
+          anyOf:
+          - type: string
+          - type: 'null'
+          description: Organization name (E.g. “aignx”)
+          examples:
+          - aignx
           title: Name
-        mime_type:
-          type: string
-          title: Mime Type
-        visibility:
-          $ref: '#/components/schemas/VersionDocumentVisibility'
-        created_at:
-          type: string
-          format: date-time
-          title: Created At
-        updated_at:
-          type: string
-          format: date-time
-          title: Updated At
-      type: object
       required:
       - id
-      - name
-      - mime_type
-      - visibility
-      - created_at
-      - updated_at
-      title: VersionDocumentResponse
-    ApplicationReadShortResponse:
-      properties:
-        application_id:
-          type: string
-          title: Application Id
-          description: Application ID
-          examples:
-          - he-tme
-        name:
-          type: string
-          title: Name
-          description: Application display name
-          examples:
-          - Atlas H&E-TME
-        regulatory_classes:
-          items:
-            type: string
-          type: array
-          title: Regulatory Classes
-          description: 'Regulatory classes, to which the applications comply with. Possible values include: RUO, IVDR, FDA.'
-          examples:
-          - - RUO
-        description:
-          type: string
-          title: Description
-          description: 'Describing what the application can do '
-          examples:
-          - The Atlas H&E TME is an AI application designed to examine FFPE (formalin-fixed, paraffin-embedded) tissues stained with H&E (hematoxylin and eosin), delivering comprehensive insights into the tumor microenvironment.
-        latest_version:
-          anyOf:
-          - $ref: '#/components/schemas/ApplicationVersion'
-          - type: 'null'
-          description: The version with highest version number available to the user
+      - aignostics_bucket_hmac_access_key_id
+      - aignostics_bucket_hmac_secret_access_key
+      - aignostics_bucket_name
+      - aignostics_bucket_protocol
+      - aignostics_logfire_token
+      - aignostics_sentry_dsn
+      title: OrganizationReadResponse
       type: object
-      required:
-      - application_id
-      - name
-      - regulatory_classes
-      - description
-      title: ApplicationReadShortResponse
-      description: Response schema for `List available applications` and `Read Application by Id` endpoints
-    OutputArtifactVisibility:
-      type: string
-      enum:
-      - INTERNAL
-      - EXTERNAL
-      title: OutputArtifactVisibility
-    ResourceType:
-      type: string
-      enum:
-      - run
-      - item
-      - output_artifact
-      - share_token
-      title: ResourceType
-    RunItemStatistics:
+    RunCreationResponse:
       properties:
-        item_count:
-          type: integer
-          title: Item Count
-          description: Total number of the items in the run
-        item_pending_count:
-          type: integer
-          title: Item Pending Count
-          description: The number of items in `PENDING` state
-        item_processing_count:
-          type: integer
-          title: Item Processing Count
-          description: The number of items in `PROCESSING` state
-        item_user_error_count:
-          type: integer
-          title: Item User Error Count
-          description: The number of items in `TERMINATED` state, and the item termination reason is `USER_ERROR`
-        item_system_error_count:
-          type: integer
-          title: Item System Error Count
-          description: The number of items in `TERMINATED` state, and the item termination reason is `SYSTEM_ERROR`
-        item_skipped_count:
-          type: integer
-          title: Item Skipped Count
-          description: The number of items in `TERMINATED` state, and the item termination reason is `SKIPPED`
-        item_succeeded_count:
-          type: integer
-          title: Item Succeeded Count
-          description: The number of items in `TERMINATED` state, and the item termination reason is `SUCCEEDED`
-      type: object
-      required:
-      - item_count
-      - item_pending_count
-      - item_processing_count
-      - item_user_error_count
-      - item_system_error_count
-      - item_skipped_count
-      - item_succeeded_count
-      title: RunItemStatistics
-    SchedulingRequest:
-      properties:
-        due_date:
-          anyOf:
-          - type: string
-            format: date-time
-          - type: 'null'
-          title: Due Date
-          description: Requested completion time. Items are prioritized to meet this target.
+        run_id:
           examples:
-          - '2026-03-04T23:59:59Z'
-        deadline:
-          anyOf:
-          - type: string
-            format: date-time
-          - type: 'null'
-          title: Deadline
-          description: Hard deadline. The run will be cancelled if not completed by this time.
-          examples:
-          - '2026-03-05T23:59:59Z'
-      type: object
-      title: SchedulingRequest
-      description: Scheduling constraints for a run.
-    GrantRelation:
-      type: string
-      enum:
-      - owner
-      - editor
-      - viewer
-      title: GrantRelation
-    ValidationError:
-      properties:
-        loc:
-          items:
-            anyOf:
-            - type: string
-            - type: integer
-          type: array
-          title: Location
-        msg:
-          type: string
-          title: Message
-        type:
-          type: string
-          title: Error Type
-        input:
-          title: Input
-        ctx:
-          type: object
-          title: Context
-      type: object
-      required:
-      - loc
-      - msg
-      - type
-      title: ValidationError
-    ShareTokenReadResponse:
-      properties:
-        share_token_id:
-          type: string
+          - 3fa85f64-5717-4562-b3fc-2c963f66afa6
           format: uuid
-          title: Share Token Id
-        created_at:
+          title: Run Id
           type: string
-          format: date-time
-          title: Created At
-        expires_at:
-          anyOf:
-          - type: string
-            format: date-time
-          - type: 'null'
-          title: Expires At
-        revoked:
-          type: boolean
-          title: Revoked
-      type: object
       required:
-      - share_token_id
-      - created_at
-      - expires_at
-      - revoked
-      title: ShareTokenReadResponse
-      description: Returned on GET endpoints — omits share_token.
-    RunTerminationReason:
-      type: string
-      enum:
-      - ALL_ITEMS_PROCESSED
-      - CANCELED_BY_SYSTEM
-      - CANCELED_BY_USER
-      title: RunTerminationReason
-    InputArtifactCreationRequest:
-      properties:
-        name:
-          type: string
-          title: Name
-          description: Name of the input artifact, as declared by the application version. The valid names for a version are the `input_artifacts[].name` values returned by `GET /v1/applications/{application_id}/versions/{version}`. For Atlas H&E-TME this is `"whole_slide_image"`.
-          examples:
-          - whole_slide_image
-        download_url:
-          type: string
-          maxLength: 2083
-          minLength: 1
-          format: uri
-          title: Download Url
-          description: '[Signed URL](https://cloud.google.com/cdn/docs/using-signed-urls) to the input artifact file. The URL should be valid for at least 6 days from the payload submission time.'
-          examples:
-          - https://example.com/case-no-1-slide.tiff
-        metadata:
-          additionalProperties: true
-          type: object
-          title: Metadata
-          description: The metadata of the artifact, as required by the application version. The authoritative JSON schema is `input_artifacts[].metadata_schema` from `GET /v1/applications/{application_id}/versions/{version}`; it rejects unknown properties. The example shown is an Atlas H&E-TME snapshot and may lag behind the version you are running — always validate against the schema endpoint.
-          examples:
-          - checksum_base64_crc32c: 64RKKA==
-            height_px: 87761
-            media_type: image/tiff
-            resolution_mpp: 0.2628238
-            specimen:
-              disease: LUNG_CANCER
-              tissue: LUNG
-            staining_method: H&E
-            width_px: 136223
+      - run_id
+      title: RunCreationResponse
       type: object
-      required:
-      - name
-      - download_url
-      - metadata
-      title: InputArtifactCreationRequest
-      description: Input artifact containing the slide image and associated metadata.
-    ItemCreationRequest:
-      properties:
-        external_id:
-          type: string
-          maxLength: 255
-          title: External Id
-          description: Unique identifier for this item within the run. Used for referencing items. Must be unique across all items in the same run
-          examples:
-          - slide_1
-          - patient_001_slide_A
-          - sample_12345
-        custom_metadata:
-          anyOf:
-          - additionalProperties: true
-            type: object
-          - type: 'null'
-          title: Custom Metadata
-          description: Optional JSON custom_metadata to store additional information alongside an item.
-          examples:
-          - case: abc
-        input_artifacts:
-          items:
-            $ref: '#/components/schemas/InputArtifactCreationRequest'
-          type: array
-          title: Input Artifacts
-          description: List of input artifacts for this item. For Atlas H&E-TME, typically contains one artifact (the slide image)
-          examples:
-          - - download_url: https://example-bucket.s3.amazonaws.com/slide1.tiff?signature=...
-              metadata:
-                checksum_base64_crc32c: 64RKKA==
-                height_px: 87761
-                media_type: image/tiff
-                resolution_mpp: 0.2628238
-                specimen:
-                  disease: LUNG_CANCER
-                  tissue: LUNG
-                staining_method: H&E
-                width_px: 136223
-              name: whole_slide_image
-      type: object
-      required:
-      - external_id
-      - input_artifacts
-      title: ItemCreationRequest
-      description: Individual item (slide) to be processed in a run.
-    ShareTokenCreateRequest:
-      properties:
-        expires_at:
-          anyOf:
-          - type: string
-            format: date-time
-          - type: 'null'
-          title: Expires At
-      type: object
-      title: ShareTokenCreateRequest
-    UserReadResponse:
-      properties:
-        id:
-          type: string
-          title: Id
-          description: Unique user identifier
-          examples:
-          - auth0|123456
-        email:
-          anyOf:
-          - type: string
-          - type: 'null'
-          title: Email
-          description: User email
-          examples:
-          - user@domain.com
-        email_verified:
-          anyOf:
-          - type: boolean
-          - type: 'null'
-          title: Email Verified
-          examples:
-          - true
-        name:
-          anyOf:
-          - type: string
-          - type: 'null'
-          title: Name
-          description: First and last name of the user
-          examples:
-          - Jane Doe
-        given_name:
-          anyOf:
-          - type: string
-          - type: 'null'
-          title: Given Name
-          examples:
-          - Jane
-        family_name:
-          anyOf:
-          - type: string
-          - type: 'null'
-          title: Family Name
-          examples:
-          - Doe
-        nickname:
-          anyOf:
-          - type: string
-          - type: 'null'
-          title: Nickname
-          examples:
-          - jdoe
-        picture:
-          anyOf:
-          - type: string
-          - type: 'null'
-          title: Picture
-          examples:
-          - https://example.com/jdoe.jpg
-        updated_at:
-          anyOf:
-          - type: string
-            format: date-time
-          - type: 'null'
-          title: Updated At
-          examples:
-          - '2023-10-05T14:48:00.000Z'
-      type: object
-      required:
-      - id
-      title: UserReadResponse
-      description: 'Part of response schema for User object in `Get current user` endpoint.
-
-        This model corresponds to the response schema returned from
-
-        Auth0 GET /v2/users/{id} endpoint.
-
-        For details, see:
-
-        https://auth0.com/docs/api/management/v2/users/get-users-by-id'
-    RunCreationRequest:
-      properties:
-        application_id:
-          type: string
-          title: Application Id
-          description: Unique ID for the application to use for processing
-          examples:
-          - he-tme
-        version_number:
-          anyOf:
-          - type: string
-          - type: 'null'
-          title: Version Number
-          description: Semantic version of the application to use for processing. If not provided, the latest available version will be used
-          examples:
-          - 1.0.0-beta1
-        custom_metadata:
-          anyOf:
-          - additionalProperties: true
-            type: object
-          - type: 'null'
-          title: Custom Metadata
-          description: Optional JSON metadata to store additional information alongside the run
-          examples:
-          - department: D1
-            study: abc-1
-        scheduling:
-          anyOf:
-          - $ref: '#/components/schemas/SchedulingRequest'
-          - type: 'null'
-          description: Optional scheduling constraints for this run.
-          examples:
-          - deadline: '2026-03-05T23:59:59Z'
-            due_date: '2026-03-04T23:59:59Z'
-        callback_context:
-          anyOf:
-          - additionalProperties: true
-            type: object
-          - type: 'null'
-          title: Callback Context
-          description: Opaque JSON object for caller-supplied correlation data. Stored verbatim and echoed in state-change events. Max 1024 bytes after JSON serialization.
-        items:
-          items:
-            $ref: '#/components/schemas/ItemCreationRequest'
-          type: array
-          minItems: 1
-          title: Items
-          description: List of items (slides) to process. Each item represents a whole slide image (WSI) with its associated metadata and artifacts
-          examples:
-          - - custom_metadata:
-                case: abc
-              external_id: slide_1
-              input_artifacts:
-              - download_url: https://example-bucket.s3.amazonaws.com/slide1.tiff?signature=...
-                metadata:
-                  checksum_base64_crc32c: 64RKKA==
-                  height_px: 87761
-                  media_type: image/tiff
-                  resolution_mpp: 0.2628238
-                  specimen:
-                    disease: LUNG_CANCER
-                    tissue: LUNG
-                  staining_method: H&E
-                  width_px: 136223
-                name: whole_slide_image
-      type: object
-      required:
-      - application_id
-      - items
-      title: RunCreationRequest
-      description: 'Request schema for `Initiate Run` endpoint.
-
-        It describes which application version is chosen, and which user data should be processed.'
-    SubjectType:
-      type: string
-      enum:
-      - user
-      - organization_admin
-      - organization_user
-      - share_token
-      title: SubjectType
-    MeReadResponse:
-      properties:
-        user:
-          $ref: '#/components/schemas/UserReadResponse'
-        organization:
-          $ref: '#/components/schemas/OrganizationReadResponse'
-      type: object
-      required:
-      - user
-      - organization
-      title: MeReadResponse
-      description: Response schema for `Get current user` endpoint
-    VersionReadResponse:
-      properties:
-        version_number:
-          type: string
-          pattern: ^(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)(?:-((?:0|[1-9]\d*|\d*[a-zA-Z-][0-9a-zA-Z-]*)(?:\.(?:0|[1-9]\d*|\d*[a-zA-Z-][0-9a-zA-Z-]*))*))?(?:\+([0-9a-zA-Z-]+(?:\.[0-9a-zA-Z-]+)*))?$
-          title: Version Number
-          description: Semantic version of the application
-        changelog:
-          type: string
-          title: Changelog
-          description: Description of the changes relative to the previous version
-        input_artifacts:
-          items:
-            $ref: '#/components/schemas/InputArtifact'
-          type: array
-          title: Input Artifacts
-          description: List of the input fields, provided by the User
-        output_artifacts:
-          items:
-            $ref: '#/components/schemas/OutputArtifact'
-          type: array
-          title: Output Artifacts
-          description: List of the output fields, generated by the application
-        released_at:
-          type: string
-          format: date-time
-          title: Released At
-          description: The timestamp when the application version was registered
-      type: object
-      required:
-      - version_number
-      - changelog
-      - input_artifacts
-      - output_artifacts
-      - released_at
-      title: VersionReadResponse
-      description: Base Response schema for the `Application Version Details` endpoint
     OutputArtifactResultReadResponse:
       properties:
-        output_artifact_id:
-          type: string
-          format: uuid
-          title: Output Artifact Id
-          description: The Id of the artifact. Used internally
-        name:
-          type: string
-          title: Name
-          description: "\nName of the output from the output schema from the `/v1/versions/{version_id}` endpoint.\n    "
-          examples:
-          - tissue_qc:tiff_heatmap
-        metadata:
+        download_url:
           anyOf:
-          - additionalProperties: true
-            type: object
+          - format: uri
+            maxLength: 2083
+            minLength: 1
+            type: string
           - type: 'null'
-          title: Metadata
-          description: The metadata of the output artifact, provided by the application. Can only be None if the artifact itself was deleted.
-        state:
-          $ref: '#/components/schemas/ArtifactState'
-          description: The current state of the artifact (PENDING, PROCESSING, TERMINATED)
-        termination_reason:
-          anyOf:
-          - $ref: '#/components/schemas/ArtifactTerminationReason'
-          - type: 'null'
-          description: The reason for termination when state is TERMINATED
-        output:
-          $ref: '#/components/schemas/ArtifactOutput'
-          description: The output status of the artifact (NONE, FULL)
+          deprecated: true
+          description: "\nThe download URL to the output file. The URL is valid for 1 hour after the endpoint is called.\nA new URL is generated every time the endpoint is called.\n    "
+          title: Download Url
         error_code:
           anyOf:
           - type: string
@@ -3011,79 +1641,585 @@ components:
           - type: string
           - type: 'null'
           title: Error Message
-        download_url:
+        metadata:
           anyOf:
-          - type: string
-            maxLength: 2083
-            minLength: 1
-            format: uri
+          - additionalProperties: true
+            type: object
           - type: 'null'
-          title: Download Url
-          description: "\nThe download URL to the output file. The URL is valid for 1 hour after the endpoint is called.\nA new URL is generated every time the endpoint is called.\n    "
-          deprecated: true
-      type: object
+          description: The metadata of the output artifact, provided by the application. Can only be None if the artifact itself was deleted.
+          title: Metadata
+        name:
+          description: "\nName of the output from the output schema from the `/v1/versions/{version_id}` endpoint.\n    "
+          examples:
+          - tissue_qc:tiff_heatmap
+          title: Name
+          type: string
+        output:
+          $ref: '#/components/schemas/ArtifactOutput'
+          description: The output status of the artifact (NONE, FULL)
+        output_artifact_id:
+          description: The Id of the artifact. Used internally
+          format: uuid
+          title: Output Artifact Id
+          type: string
+        state:
+          $ref: '#/components/schemas/ArtifactState'
+          description: The current state of the artifact (PENDING, PROCESSING, TERMINATED)
+        termination_reason:
+          anyOf:
+          - $ref: '#/components/schemas/ArtifactTerminationReason'
+          - type: 'null'
+          description: The reason for termination when state is TERMINATED
       required:
       - output_artifact_id
       - name
       - state
       - output
       title: OutputArtifactResultReadResponse
-    ItemOutput:
-      type: string
+      type: object
+    HTTPValidationError:
+      properties:
+        detail:
+          items:
+            $ref: '#/components/schemas/ValidationError'
+          title: Detail
+          type: array
+      title: HTTPValidationError
+      type: object
+    ItemCreationRequest:
+      description: Individual item (slide) to be processed in a run.
+      properties:
+        custom_metadata:
+          anyOf:
+          - additionalProperties: true
+            type: object
+          - type: 'null'
+          description: Optional JSON custom_metadata to store additional information alongside an item.
+          examples:
+          - case: abc
+          title: Custom Metadata
+        external_id:
+          description: Unique identifier for this item within the run. Used for referencing items. Must be unique across all items in the same run
+          examples:
+          - slide_1
+          - patient_001_slide_A
+          - sample_12345
+          maxLength: 255
+          title: External Id
+          type: string
+        input_artifacts:
+          description: List of input artifacts for this item. For Atlas H&E-TME, typically contains one artifact (the slide image)
+          examples:
+          - - download_url: https://example-bucket.s3.amazonaws.com/slide1.tiff
+              metadata:
+                checksum_base64_crc32c: 64RKKA==
+                height_px: 87761
+                media-type: image/tiff
+                resolution_mpp: 0.2628238
+                specimen:
+                  disease: LUNG_CANCER
+                  tissue: LUNG
+                staining_method: H&E
+                width_px: 136223
+              name: input_slide
+          items:
+            $ref: '#/components/schemas/InputArtifactCreationRequest'
+          title: Input Artifacts
+          type: array
+      required:
+      - external_id
+      - input_artifacts
+      title: ItemCreationRequest
+      type: object
+    SchedulingResponse:
+      description: Scheduling fields returned in run responses.
+      properties:
+        deadline:
+          anyOf:
+          - format: date-time
+            type: string
+          - type: 'null'
+          title: Deadline
+        due_date:
+          anyOf:
+          - format: date-time
+            type: string
+          - type: 'null'
+          title: Due Date
+      title: SchedulingResponse
+      type: object
+    CustomMetadataUpdateResponse:
+      properties:
+        custom_metadata_checksum:
+          anyOf:
+          - type: string
+          - type: 'null'
+          description: 'The checksum of the updated custom metadata. If the `custom_metadata` is None,
+
+            the checksum also None.'
+          readOnly: true
+          title: Custom Metadata Checksum
+      required:
+      - custom_metadata_checksum
+      title: CustomMetadataUpdateResponse
+      type: object
+    ApplicationVersion:
+      properties:
+        number:
+          description: The number of the latest version
+          examples:
+          - 1.0.0
+          pattern: ^(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)(?:-((?:0|[1-9]\d*|\d*[a-zA-Z-][0-9a-zA-Z-]*)(?:\.(?:0|[1-9]\d*|\d*[a-zA-Z-][0-9a-zA-Z-]*))*))?(?:\+([0-9a-zA-Z-]+(?:\.[0-9a-zA-Z-]+)*))?$
+          title: Number
+          type: string
+        released_at:
+          description: The timestamp for when the application version was made available in the Platform
+          examples:
+          - '2025-09-15T10:30:45.123Z'
+          format: date-time
+          title: Released At
+          type: string
+      required:
+      - number
+      - released_at
+      title: ApplicationVersion
+      type: object
+    ArtifactOutput:
       enum:
       - NONE
-      - FULL
-      title: ItemOutput
-    RunOutput:
+      - AVAILABLE
+      - DELETED_BY_USER
+      - DELETED_BY_SYSTEM
+      title: ArtifactOutput
       type: string
+    SchedulingRequest:
+      description: Scheduling constraints for a run.
+      properties:
+        deadline:
+          anyOf:
+          - format: date-time
+            type: string
+          - type: 'null'
+          description: Hard deadline. The run will be cancelled if not completed by this time.
+          examples:
+          - '2026-03-05T23:59:59Z'
+          title: Deadline
+        due_date:
+          anyOf:
+          - format: date-time
+            type: string
+          - type: 'null'
+          description: Requested completion time. Items are prioritized to meet this target.
+          examples:
+          - '2026-03-04T23:59:59Z'
+          title: Due Date
+      title: SchedulingRequest
+      type: object
+    UserReadResponse:
+      description: 'Part of response schema for User object in `Get current user` endpoint.
+
+        This model corresponds to the response schema returned from
+
+        Auth0 GET /v2/users/{id} endpoint.
+
+        For details, see:
+
+        https://auth0.com/docs/api/management/v2/users/get-users-by-id'
+      properties:
+        email:
+          anyOf:
+          - type: string
+          - type: 'null'
+          description: User email
+          examples:
+          - user@domain.com
+          title: Email
+        email_verified:
+          anyOf:
+          - type: boolean
+          - type: 'null'
+          examples:
+          - true
+          title: Email Verified
+        family_name:
+          anyOf:
+          - type: string
+          - type: 'null'
+          examples:
+          - Doe
+          title: Family Name
+        given_name:
+          anyOf:
+          - type: string
+          - type: 'null'
+          examples:
+          - Jane
+          title: Given Name
+        id:
+          description: Unique user identifier
+          examples:
+          - auth0|123456
+          title: Id
+          type: string
+        name:
+          anyOf:
+          - type: string
+          - type: 'null'
+          description: First and last name of the user
+          examples:
+          - Jane Doe
+          title: Name
+        nickname:
+          anyOf:
+          - type: string
+          - type: 'null'
+          examples:
+          - jdoe
+          title: Nickname
+        picture:
+          anyOf:
+          - type: string
+          - type: 'null'
+          examples:
+          - https://example.com/jdoe.jpg
+          title: Picture
+        updated_at:
+          anyOf:
+          - format: date-time
+            type: string
+          - type: 'null'
+          examples:
+          - '2023-10-05T14:48:00.000Z'
+          title: Updated At
+      required:
+      - id
+      title: UserReadResponse
+      type: object
+    MeReadResponse:
+      description: Response schema for `Get current user` endpoint
+      properties:
+        organization:
+          $ref: '#/components/schemas/OrganizationReadResponse'
+        user:
+          $ref: '#/components/schemas/UserReadResponse'
+      required:
+      - user
+      - organization
+      title: MeReadResponse
+      type: object
+    OutputArtifact:
+      properties:
+        metadata_schema:
+          additionalProperties: true
+          title: Metadata Schema
+          type: object
+        mime_type:
+          examples:
+          - application/vnd.apache.parquet
+          pattern: ^\w+\/\w+[-+.|\w+]+\w+$
+          title: Mime Type
+          type: string
+        name:
+          title: Name
+          type: string
+        scope:
+          $ref: '#/components/schemas/OutputArtifactScope'
+        visibility:
+          $ref: '#/components/schemas/OutputArtifactVisibility'
+      required:
+      - name
+      - mime_type
+      - metadata_schema
+      - scope
+      - visibility
+      title: OutputArtifact
+      type: object
+    RunState:
+      enum:
+      - PENDING
+      - PROCESSING
+      - TERMINATED
+      title: RunState
+      type: string
+    OutputArtifactScope:
+      enum:
+      - ITEM
+      - GLOBAL
+      title: OutputArtifactScope
+      type: string
+    VersionReadResponse:
+      description: Base Response schema for the `Application Version Details` endpoint
+      properties:
+        changelog:
+          description: Description of the changes relative to the previous version
+          title: Changelog
+          type: string
+        input_artifacts:
+          description: List of the input fields, provided by the User
+          items:
+            $ref: '#/components/schemas/InputArtifact'
+          title: Input Artifacts
+          type: array
+        output_artifacts:
+          description: List of the output fields, generated by the application
+          items:
+            $ref: '#/components/schemas/OutputArtifact'
+          title: Output Artifacts
+          type: array
+        released_at:
+          description: The timestamp when the application version was registered
+          format: date-time
+          title: Released At
+          type: string
+        version_number:
+          description: Semantic version of the application
+          pattern: ^(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)(?:-((?:0|[1-9]\d*|\d*[a-zA-Z-][0-9a-zA-Z-]*)(?:\.(?:0|[1-9]\d*|\d*[a-zA-Z-][0-9a-zA-Z-]*))*))?(?:\+([0-9a-zA-Z-]+(?:\.[0-9a-zA-Z-]+)*))?$
+          title: Version Number
+          type: string
+      required:
+      - version_number
+      - changelog
+      - input_artifacts
+      - output_artifacts
+      - released_at
+      title: VersionReadResponse
+      type: object
+    RunReadResponse:
+      description: Response schema for `Get run details` endpoint
+      properties:
+        application_id:
+          description: Application id
+          examples:
+          - he-tme
+          title: Application Id
+          type: string
+        custom_metadata:
+          anyOf:
+          - additionalProperties: true
+            type: object
+          - type: 'null'
+          description: Optional JSON metadata that was stored in alongside the run by the user
+          examples:
+          - department: D1
+            study: abc-1
+          title: Custom Metadata
+        custom_metadata_checksum:
+          anyOf:
+          - type: string
+          - type: 'null'
+          description: 'The checksum of the `custom_metadata` field. Can be used in the `PUT /runs/{run-id}/custom_metadata`
+
+            request to avoid unwanted override of the values in concurrent requests.'
+          examples:
+          - f54fe109
+          title: Custom Metadata Checksum
+        error_code:
+          anyOf:
+          - type: string
+          - type: 'null'
+          description: "When the termination_reason is set to CANCELED_BY_SYSTEM, the error_code is set to define the\n        structured description of the error."
+          examples:
+          - SCHEDULER.ITEMS_WITH_ERROR_THRESHOLD_REACHED
+          title: Error Code
+        error_message:
+          anyOf:
+          - type: string
+          - type: 'null'
+          description: "When the termination_reason is set to CANCELED_BY_SYSTEM, the error_message is set to provide\n        more insights to the error cause."
+          examples:
+          - Run canceled given errors on more than 10 items.
+          title: Error Message
+        num_preceding_items_org:
+          anyOf:
+          - type: integer
+          - type: 'null'
+          description: How many Items from other Runs in the same Organization are due to begin processing before this Run's next Item does.
+          title: Num Preceding Items Org
+        num_preceding_items_platform:
+          anyOf:
+          - type: integer
+          - type: 'null'
+          description: How many Items from other Runs are due to begin processing before this Run's next Item does.
+          title: Num Preceding Items Platform
+        output:
+          $ref: '#/components/schemas/RunOutput'
+          description: 'The status of the output of the run. When 0 items are successfully processed the output is
+
+            `NONE`, after one item is successfully processed, the value is set to `PARTIAL`. When all items of the run are
+
+            successfully processed, the output is set to `FULL`.'
+        run_id:
+          description: UUID of the application
+          format: uuid
+          title: Run Id
+          type: string
+        scheduling:
+          anyOf:
+          - $ref: '#/components/schemas/SchedulingResponse'
+          - type: 'null'
+          description: Scheduling constraints set for this run.
+        state:
+          $ref: '#/components/schemas/RunState'
+          description: 'When the run request is received by the Platform, the `state` of it is set to
+
+            `PENDING`. The state changes to `PROCESSING` when at least one item is being processed. After `PROCESSING`, the
+
+            state of the run can switch back to `PENDING` if there are no processing items, or to `TERMINATED` when the run
+
+            finished processing.'
+        statistics:
+          $ref: '#/components/schemas/RunItemStatistics'
+          description: Aggregated statistics of the run execution
+        submitted_at:
+          description: Timestamp showing when the run was triggered
+          format: date-time
+          title: Submitted At
+          type: string
+        submitted_by:
+          description: Id of the user who triggered the run
+          examples:
+          - auth0|123456
+          title: Submitted By
+          type: string
+        terminated_at:
+          anyOf:
+          - format: date-time
+            type: string
+          - type: 'null'
+          description: Timestamp showing when the run reached a terminal state.
+          examples:
+          - '2024-01-15T10:30:45.123Z'
+          title: Terminated At
+        termination_reason:
+          anyOf:
+          - $ref: '#/components/schemas/RunTerminationReason'
+          - type: 'null'
+          description: "The termination reason of the run. When the run is not in `TERMINATED` state, the\n        termination_reason is `null`. If all items of of the run are processed (successfully or with an error), then\n        termination_reason is set to `ALL_ITEMS_PROCESSED`. If the run is cancelled by the user, the value is set to\n        `CANCELED_BY_USER`. If the run reaches the threshold of number of failed items, the Platform cancels the run\n        and sets the termination_reason to `CANCELED_BY_SYSTEM`.\n        "
+        version_number:
+          description: Application version number
+          examples:
+          - 0.4.4
+          title: Version Number
+          type: string
+      required:
+      - run_id
+      - application_id
+      - version_number
+      - state
+      - output
+      - termination_reason
+      - error_code
+      - error_message
+      - statistics
+      - submitted_at
+      - submitted_by
+      title: RunReadResponse
+      type: object
+    InputArtifactCreationRequest:
+      description: Input artifact containing the slide image and associated metadata.
+      properties:
+        download_url:
+          description: '[Signed URL](https://cloud.google.com/cdn/docs/using-signed-urls) to the input artifact file. The URL should be valid for at least 6 days from the payload submission time.'
+          examples:
+          - https://example.com/case-no-1-slide.tiff
+          format: uri
+          maxLength: 2083
+          minLength: 1
+          title: Download Url
+          type: string
+        metadata:
+          additionalProperties: true
+          description: The metadata of the artifact, required by the application version. The JSON schema of the metadata can be requested by `/v1/versions/{application_version_id}`. The schema is located in `input_artifacts.[].metadata_schema`
+          examples:
+          - checksum_base64_crc32c: 752f9554
+            height: 2000
+            height_mpp: 0.5
+            width: 10000
+            width_mpp: 0.5
+          title: Metadata
+          type: object
+        name:
+          description: Type of artifact. For Atlas H&E-TME, use "input_slide"
+          examples:
+          - input_slide
+          title: Name
+          type: string
+      required:
+      - name
+      - download_url
+      - metadata
+      title: InputArtifactCreationRequest
+      type: object
+    RunTerminationReason:
+      enum:
+      - ALL_ITEMS_PROCESSED
+      - CANCELED_BY_SYSTEM
+      - CANCELED_BY_USER
+      title: RunTerminationReason
+      type: string
+    RunOutput:
       enum:
       - NONE
       - PARTIAL
       - FULL
       title: RunOutput
-    ArtifactTerminationReason:
       type: string
+    ArtifactTerminationReason:
       enum:
       - SUCCEEDED
       - USER_ERROR
       - SYSTEM_ERROR
       - SKIPPED
       title: ArtifactTerminationReason
+      type: string
+    ArtifactState:
+      enum:
+      - PENDING
+      - PROCESSING
+      - TERMINATED
+      title: ArtifactState
+      type: string
+    ItemOutput:
+      enum:
+      - NONE
+      - FULL
+      title: ItemOutput
+      type: string
     ApplicationReadResponse:
+      description: Response schema for `List available applications` and `Read Application by Id` endpoints
       properties:
         application_id:
-          type: string
-          title: Application Id
           description: Application ID
           examples:
           - he-tme
-        name:
+          title: Application Id
           type: string
-          title: Name
-          description: Application display name
-          examples:
-          - Atlas H&E-TME
-        regulatory_classes:
-          items:
-            type: string
-          type: array
-          title: Regulatory Classes
-          description: 'Regulatory classes, to which the applications comply with. Possible values include: RUO, IVDR, FDA.'
-          examples:
-          - - RUO
         description:
-          type: string
-          title: Description
           description: 'Describing what the application can do '
           examples:
           - The Atlas H&E TME is an AI application designed to examine FFPE (formalin-fixed, paraffin-embedded) tissues stained with H&E (hematoxylin and eosin), delivering comprehensive insights into the tumor microenvironment.
+          title: Description
+          type: string
+        name:
+          description: Application display name
+          examples:
+          - Atlas H&E-TME
+          title: Name
+          type: string
+        regulatory_classes:
+          description: 'Regulatory classes, to which the applications comply with. Possible values include: RUO, IVDR, FDA.'
+          examples:
+          - - RUO
+          items:
+            type: string
+          title: Regulatory Classes
+          type: array
         versions:
+          description: All version numbers available to the user
           items:
             $ref: '#/components/schemas/ApplicationVersion'
-          type: array
           title: Versions
-          description: All version numbers available to the user
-      type: object
+          type: array
       required:
       - application_id
       - name
@@ -3091,42 +2227,145 @@ components:
       - description
       - versions
       title: ApplicationReadResponse
-      description: Response schema for `List available applications` and `Read Application by Id` endpoints
-    ArtifactState:
-      type: string
-      enum:
-      - PENDING
-      - PROCESSING
-      - TERMINATED
-      title: ArtifactState
-    ArtifactOutput:
-      type: string
-      enum:
-      - NONE
-      - AVAILABLE
-      - DELETED_BY_USER
-      - DELETED_BY_SYSTEM
-      title: ArtifactOutput
-    CustomMetadataUpdateResponse:
+      type: object
+    CustomMetadataUpdateRequest:
       properties:
+        custom_metadata:
+          anyOf:
+          - additionalProperties: true
+            type: object
+          - type: 'null'
+          description: JSON metadata that should be set for the run
+          examples:
+          - department: D1
+            study: abc-1
+          title: Custom Metadata
         custom_metadata_checksum:
           anyOf:
           - type: string
           - type: 'null'
+          description: Optional field to verify that the latest custom metadata was known. If set to the checksum retrieved via the /runs endpoint, it must match the checksum of the current value in the database.
+          examples:
+          - f54fe109
           title: Custom Metadata Checksum
-          description: 'The checksum of the updated custom metadata. If the `custom_metadata` is None,
-
-            the checksum also None.'
-          readOnly: true
+      title: CustomMetadataUpdateRequest
       type: object
+    ItemResultReadResponse:
+      description: Response schema for items in `List Run Items` endpoint
+      properties:
+        custom_metadata:
+          anyOf:
+          - additionalProperties: true
+            type: object
+          - type: 'null'
+          description: The custom_metadata of the item that has been provided by the user on run creation.
+          title: Custom Metadata
+        custom_metadata_checksum:
+          anyOf:
+          - type: string
+          - type: 'null'
+          description: 'The checksum of the `custom_metadata` field.
+
+            Can be used in the `PUT /runs/{run-id}/items/{external_id}/custom_metadata`
+
+            request to avoid unwanted override of the values in concurrent requests.'
+          examples:
+          - f54fe109
+          title: Custom Metadata Checksum
+        error_code:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Error Code
+        error_message:
+          anyOf:
+          - type: string
+          - type: 'null'
+          description: "\n    The error message in case the `termination_reason` is in `USER_ERROR` or `SYSTEM_ERROR`\n        "
+          examples:
+          - This item was not processed because the threshold of 3 items finishing in error state (user or system error) was reached before the item was processed.
+          - The item was not processed because the run was cancelled by the user before the item was processed.
+          - 'User error raised by Application because the input data provided by the user cannot be processed:
+
+            The image width is 123000 px, but the maximum width is 100000 px'
+          - "A system error occurred during the item execution:\n System went out of memory in cell classification"
+          - An unknown system error occurred during the item execution
+          title: Error Message
+        external_id:
+          description: The external_id of the item from the user payload
+          examples:
+          - slide_1
+          title: External Id
+          type: string
+        item_id:
+          description: Item UUID generated by the Platform
+          format: uuid
+          title: Item Id
+          type: string
+        output:
+          $ref: '#/components/schemas/ItemOutput'
+          description: The output status of the item (NONE, FULL)
+        output_artifacts:
+          description: "\nThe list of the results generated by the application algorithm. The number of files and their\ntypes depend on the particular application version, call `/v1/versions/{version_id}` to get\nthe details.\n    "
+          items:
+            $ref: '#/components/schemas/OutputArtifactResultReadResponse'
+          title: Output Artifacts
+          type: array
+        queue_position_org:
+          anyOf:
+          - type: integer
+          - type: 'null'
+          description: The position of the item in the organization's queue.
+          title: Queue Position Org
+        queue_position_platform:
+          anyOf:
+          - type: integer
+          - type: 'null'
+          description: The position of the item in the platform's queue.
+          title: Queue Position Platform
+        state:
+          $ref: '#/components/schemas/ItemState'
+          description: "\nThe item moves from `PENDING` to `PROCESSING` to `TERMINATED` state.\nWhen terminated, consult the `termination_reason` property to see whether it was successful.\n    "
+        terminated_at:
+          anyOf:
+          - format: date-time
+            type: string
+          - type: 'null'
+          description: Timestamp showing when the item reached a terminal state.
+          examples:
+          - '2024-01-15T10:30:45.123Z'
+          title: Terminated At
+        termination_reason:
+          anyOf:
+          - $ref: '#/components/schemas/ItemTerminationReason'
+          - type: 'null'
+          description: '
+
+            When the `state` is `TERMINATED` this will explain why
+
+            `SUCCEEDED` -> Successful processing.
+
+            `USER_ERROR` -> Failed because the provided input was invalid.
+
+            `SYSTEM_ERROR` -> There was an error in the model or platform.
+
+            `SKIPPED` -> Was cancelled
+
+            '
       required:
-      - custom_metadata_checksum
-      title: CustomMetadataUpdateResponse
+      - item_id
+      - external_id
+      - custom_metadata
+      - state
+      - output
+      - output_artifacts
+      title: ItemResultReadResponse
+      type: object
   securitySchemes:
     OAuth2AuthorizationCodeBearer:
-      type: oauth2
       flows:
         authorizationCode:
+          authorizationUrl: https://aignostics-platform-staging.eu.auth0.com/authorize
           scopes: {}
-          authorizationUrl: https://aignostics-platform.eu.auth0.com/authorize
-          tokenUrl: https://aignostics-platform.eu.auth0.com/oauth/token
+          tokenUrl: https://aignostics-platform-staging.eu.auth0.com/oauth/token
+      type: oauth2

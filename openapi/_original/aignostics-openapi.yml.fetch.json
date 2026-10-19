@@ -1,0 +1,12 @@
+{
+ "url": "https://aignostics.readthedocs.io/en/latest/_static/_static/openapi_v1.yaml",
+ "final": "https://aignostics.readthedocs.io/en/latest/_static/_static/openapi_v1.yaml",
+ "status": 200,
+ "content_type": "application/yaml",
+ "bytes": 84380,
+ "sha256": "2d05054a57f9eb9d9dbcfb59557c6c806603977a648029d9e1355c356671da67",
+ "fetched_at": "2026-10-19",
+ "fetched_by": "APIEvangelist-Harvest/1.0 (+https://apievangelist.com)",
+ "match": "byte-identical",
+ "note": "re-archived: the provider's current document replaced a stale archive (roadmap#793); the old files are in openapi/_superseded/2026-10-19-stale"
+}
