@@ -2369,3 +2369,9 @@ components:
           scopes: {}
           tokenUrl: https://aignostics-platform-staging.eu.auth0.com/oauth/token
       type: oauth2
+x-provenance:
+  method: harvested
+  publisher: Aignostics
+  source: https://aignostics.readthedocs.io/en/latest/_static/_static/openapi_v1.yaml
+  note: split by refine-openapis from the provider's own published document, verified by fetch (openapi/_original/*.fetch.json);
+    stamped by stamp-openapi-provenance.py (roadmap#793)
