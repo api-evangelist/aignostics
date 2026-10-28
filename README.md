@@ -64,52 +64,132 @@
 > Full detail: **[Where this data comes from](https://apievangelist.com/about/where-our-data-comes-from)**
 <!-- API-EVANGELIST-PROVENANCE:END -->
 
-Aignostics GmbH (Berlin, Germany) builds AI foundation models and analysis applications for
-computational pathology. The commercial surface is the **Aignostics Platform** — a cloud service that
-runs pathology applications over whole slide images on dedicated GPU infrastructure, with Atlas
-H&E-TME tumor-microenvironment profiling as the flagship.
+Aignostics GmbH is a Berlin-based computational pathology company, spun out of Charite Universitaetsmedizin Berlin, that builds AI foundation models and analysis applications for whole slide images (WSI). Its commercial surface is the Aignostics Platform, a cloud service that runs computational pathology applications - Atlas H&E-TME tumor-microenvironment profiling is the flagship - on dedicated NVIDIA GPU infrastructure, with a per-organization Google Cloud Storage bucket and Auth0-backed enterprise SSO. The Platform is reachable three ways: a browser Console, an open-source Python SDK (Launchpad desktop app, CLI, client library and an in-development MCP server), and a public REST contract - the Aignostics Platform API, an OpenAPI 3.1.0 document with 26 operations served unauthenticated at https://platform.aignostics.com/api/v1/openapi.json. The API covers application and version discovery, run submission and cancellation, per-item result and artifact retrieval, custom metadata with checksum-guarded writes, and an access-grant / share-token sharing model. Access is organization-scoped: there is no anonymous access and no organization-wide API key.
 
-## API surface
+**Areas:** Company · Artificial Intelligence · Machine Learning · Health · Healthcare · Life Sciences · Pathology · Medical Imaging · Digital Pathology · Oncology · Biotechnology · Research
 
-| | |
+## Aignostics on APIs.io
+
+Everything profiled for Aignostics is published on APIs.io rather than in this repository. Start at the provider page — **[apis.io/providers/aignostics/](https://apis.io/providers/aignostics/)** — or go straight to one of the APIs or properties below.
+
+### APIs (1)
+
+- [Aignostics Public API](https://apis.io/apis/aignostics/aignostics-public-api/) — The Public API from Aignostics — 21 operation(s) for public.
+
+### Published properties
+
+Each property below is a page on APIs.io carrying the machine-readable artifact and what it says.
+
+#### AsyncAPI (1)
+
+Event-driven and webhook contracts.
+
+- [Aignostics Event Surface](https://apis.io/asyncapis/aignostics/aignostics-event-surface/)
+
+#### MCP servers (1)
+
+Model Context Protocol servers that expose the API to agents.
+
+- [Central Aignostics MCP Server](https://apis.io/servers/aignostics/central-aignostics-mcp-server/)
+
+#### Overlays (1)
+
+OpenAPI overlays, including conversational phrasing for each operation.
+
+- [Aignostics Platform Api Overlay](https://apis.io/overlays/aignostics/aignostics-platform-api-overlay/)
+
+#### Security (3)
+
+Authentication, trust centre, and vulnerability disclosure.
+
+- [Aignostics Authentication](https://apis.io/security/aignostics/aignostics-authentication/)
+- [Aignostics Domain Security](https://apis.io/security/aignostics/aignostics-domain-security/)
+- [Aignostics Vulnerability Disclosure](https://apis.io/security/aignostics/aignostics-vulnerability-disclosure/)
+
+#### OAuth scopes (1)
+
+The permissions the API asks for.
+
+- [Aignostics Scopes](https://apis.io/scopes/aignostics/aignostics-scopes/)
+
+#### Plans and pricing (1)
+
+Published plans, tiers and prices.
+
+- [Aignostics Plans Pricing](https://apis.io/plans/aignostics/aignostics-plans-pricing/)
+
+#### Rate limits (1)
+
+Published request limits.
+
+- [Aignostics Rate Limits](https://apis.io/rate-limits/aignostics/aignostics-rate-limits/)
+
+## Where to find this API
+
+Links to the company's own pages. This repository publishes no copy of their specifications — the canonical document is theirs and lives at the URLs below.
+
+- [Website](https://www.aignostics.com/)
+- [Documentation](https://aignostics.readthedocs.io/en/latest/)
+- [Getting started](https://aignostics.readthedocs.io/en/latest/get_started_api.html)
+- [API reference](https://aignostics.readthedocs.io/en/latest/api_explorer_v1.html)
+- [Sign up](https://platform.aignostics.com/)
+- [Support](https://www.aignostics.com/contact)
+- [Blog](https://www.aignostics.com/blog)
+- [Privacy policy](https://www.aignostics.com/privacy-policy)
+- [GitHub](https://github.com/aignostics)
+- [Status](https://status.aignostics.com/)
+
+## API Evangelist rating
+
+**Kin Score 50.1** — developing · rubric 0.25.0 · scored 2026-10-23
+
+| Facet | Score |
 |---|---|
-| API | Aignostics Platform API |
-| Base URL | `https://platform.aignostics.com/api/v1` |
-| Contract | OpenAPI 3.1.0 — 26 operations, 45 schemas, `info.version` 1.8.0 |
-| Contract URL | <https://platform.aignostics.com/api/v1/openapi.json> (public, unauthenticated) |
-| Auth | OAuth 2.0 bearer — authorization-code and device-code (RFC 8628) against an Auth0 tenant |
-| Access | Organization subscription. No anonymous access, no API keys, no self-serve signup. |
+| Discoverability | 65.0 |
+| Contract quality | 50.1 |
+| Contract governance | 4.5 |
+| Operational transparency | 36.8 |
+| Developer ergonomics | 80.4 |
+| Access clarity | 17.1 |
 
-The contract was captured from the live host, not from the copy vendored in the SDK repository —
-that copy was still at `1.4.0` with 14 operations and pointed its OAuth URLs at a **staging** Auth0
-tenant on the day the live document served `1.8.0` with 26 operations against production.
+**Agent readiness 47.2** — agent-ready (gated down from agent-native)
 
-## Links
+| Agent-readiness dimension | Result |
+|---|---|
+| Spec Presence | yes |
+| Agentic Access | — |
+| Reversibility Documented | documented (partial credit) |
+| MCP Server | documented (partial credit) |
+| Auth Clarity | served (partial credit) |
+| Idempotency | — |
+| Error Semantics | verified |
+| OpenAPI Examples | partial |
+| Rate Limit Signal | documented (partial credit) |
+| Event Surface Described | derived (partial credit) |
+| Agent Skills | derived (partial credit) |
+| Well Known Catalog | — |
+| Consent Identity | — |
+| Agent Card | — |
+| Dry Run Mode | — |
+| Delegated Identity | served (partial credit) |
+| Protected Resource Metadata | — |
+| Dynamic Client Registration | yes |
+| Agentic Commerce | — |
+| Pagination Ratio | partial |
+| Operation Distinctiveness | distinct |
 
-- Documentation — <https://aignostics.readthedocs.io/en/latest/>
-- Get started with the API — <https://aignostics.readthedocs.io/en/latest/get_started_api.html>
-- Status — <https://status.aignostics.com/> (Better Stack; JSON, RSS and Atom feeds)
-- GitHub — <https://github.com/aignostics>
-- Python SDK — <https://pypi.org/project/aignostics/> · TypeScript SDK — <https://www.npmjs.com/package/@aignostics/sdk>
-- Company — <https://www.aignostics.com/>
+**Regulatory alignment 32.4** — Health
 
-## Notable findings
+The rubric is published at [github.com/api-evangelist/kin-score](https://github.com/api-evangelist/kin-score). The per-check breakdown behind these numbers — which checks were earned, partial or missed — along with score history and how this provider compares to its peers, is available at [apis.io/providers/aignostics/](https://apis.io/providers/aignostics/).
 
-- **No idempotency.** The docs state plainly that `POST /v1/runs` is not idempotent — calling it
-  twice analyzes the slides twice, and bills twice. No `Idempotency-Key` exists anywhere in the spec.
-- **Strong reversibility.** Every costly or destructive write has a named reversal with a *stated*
-  window: cancel any time before `TERMINATED` (pending items "will not add to the cost"), revoke a
-  grant or share token at any time. Artifact deletion is the one-way exception, and artifacts are
-  auto-deleted 30 days after a run finishes regardless.
-- **402, not 429.** The only exhaustion signal is a commercial quota (slides per run, monthly slides)
-  whose values are unpublished. No rate-limit headers, no `Retry-After`.
-- **Domain standards in the contract.** `application/dicom` is an accepted input media type, and
-  `ApplicationReadResponse.regulatory_classes` enumerates `RUO`, `IVDR`, `FDA` per application.
-- **MCP ships but is dark.** `aignostics mcp run` starts a real stdio MCP server inside the Python
-  SDK, but no FastMCP tools are registered in-tree, and the customer guide is withdrawn (404).
-- **`GET /v1/me` returns credentials** — the organization's GCS HMAC secret access key, a Logfire
-  token and a Sentry DSN. Do not log or cache that response.
-- **No pricing, no terms, no `security.txt`.** A vulnerability disclosure process does exist, in the
-  SDK's security policy.
+## How this profile is made
 
-Harvest source: <https://equityzen.com/company/aignostics>
+API Evangelist profiles a company's public API surface the way a developer would find it: the website, developer portal and documentation, the specifications it publishes, its public repositories, and its pricing, status and changelog pages. From that it derives the properties above — contracts split per API, workflows, schemas, collections, governance rules, plans and rate limits — and scores them against the published [Kin Score rubric](https://github.com/api-evangelist/kin-score).
+
+The artifacts are published on [APIs.io](https://apis.io), not in this repository. This repository is the public record for Aignostics: the place to say something is wrong, missing or out of date, and to ask for a re-score or a removal.
+
+## Open an issue
+
+- **Something about this listing** — a wrong description, a missing API, a stale artifact or a question about the rating: [open an issue on this repository](https://github.com/api-evangelist/aignostics/issues/new).
+- **A new API, or one that is not in the catalog yet** — [submit it on APIs.io](https://apis.io/add/).
+- **Anything else** — [the APIs.io inbox](https://github.com/api-search/inbox/issues/new) or [info@apievangelist.com](mailto:info@apievangelist.com).
