@@ -98,6 +98,12 @@ OpenAPI overlays, including conversational phrasing for each operation.
 
 - [Aignostics Platform Api Overlay](https://apis.io/overlays/aignostics/aignostics-platform-api-overlay/)
 
+#### Governance rules (1)
+
+Spectral rulesets for the provider's contracts.
+
+- [Aignostics API Rules](https://apis.io/rules/aignostics/aignostics-rules/)
+
 #### Security (3)
 
 Authentication, trust centre, and vulnerability disclosure.
@@ -124,6 +130,12 @@ Published request limits.
 
 - [Aignostics Rate Limits](https://apis.io/rate-limits/aignostics/aignostics-rate-limits/)
 
+#### FinOps (1)
+
+What the API costs to run, by operation.
+
+- [Aignostics Finops](https://apis.io/finops/aignostics/aignostics-finops/)
+
 ## Where to find this API
 
 Links to the company's own pages. This repository publishes no copy of their specifications — the canonical document is theirs and lives at the URLs below.
@@ -141,18 +153,18 @@ Links to the company's own pages. This repository publishes no copy of their spe
 
 ## API Evangelist rating
 
-**Kin Score 50.1** — developing · rubric 0.25.0 · scored 2026-10-23
+**Kin Score 53.9** — developing · rubric 0.28.1 · scored 2026-11-21
 
 | Facet | Score |
 |---|---|
 | Discoverability | 65.0 |
-| Contract quality | 50.1 |
-| Contract governance | 4.5 |
-| Operational transparency | 36.8 |
+| Contract quality | 56.0 |
+| Contract governance | 18.2 |
+| Operational transparency | 40.5 |
 | Developer ergonomics | 80.4 |
-| Access clarity | 17.1 |
+| Access clarity | 18.1 |
 
-**Agent readiness 47.2** — agent-ready (gated down from agent-native)
+**Agent readiness 48.3** — agent-ready (gated down from agent-native)
 
 | Agent-readiness dimension | Result |
 |---|---|
@@ -175,8 +187,12 @@ Links to the company's own pages. This repository publishes no copy of their spe
 | Protected Resource Metadata | — |
 | Dynamic Client Registration | yes |
 | Agentic Commerce | — |
-| Pagination Ratio | partial |
+| Pagination Ratio | paginated |
 | Operation Distinctiveness | distinct |
+| MCP Tool Quality | na |
+| Onboarding Descriptor | — |
+| Dns Aid Index | na |
+| Markdown Negotiation | yes |
 
 **Regulatory alignment 32.4** — Health
 
